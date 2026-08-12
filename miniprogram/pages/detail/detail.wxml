@@ -1,0 +1,150 @@
+<!--pages/detail/detail.wxml - 菜品详情-->
+<view class="page" wx:if="{{dish}}">
+  <!-- 返回标题 -->
+  <view class="back-bar" bindtap="goBack">
+    <text>← {{dish.name}}</text>
+  </view>
+
+  <!-- 封面图片 -->
+  <view class="detail-cover">
+    <image wx:if="{{dish.displayImage}}" src="{{dish.displayImage}}" mode="aspectFill" binderror="onCoverImageError" />
+    <text wx:else class="cover-emoji">{{dish.emoji}}</text>
+  </view>
+
+  <!-- 标题信息 -->
+  <view class="title-row">
+    <view>
+      <text class="dish-name">{{dish.name}}</text>
+      <text class="stars-lg">{{dish.starsText}}</text>
+    </view>
+    <text class="badge">{{dish.category}}</text>
+  </view>
+  <text class="count-text">已做 {{dish.count}} 次</text>
+
+  <!-- 操作按钮 -->
+  <view class="action-row">
+    <button class="btn-sm" bindtap="addToToday">📋 加入今日</button>
+    <button class="btn-sm btn-outline" bindtap="openEditDish">✏️ 编辑</button>
+    <button class="btn-sm btn-outline" bindtap="openEditSteps">📝 做法</button>
+    <button class="delete-btn" bindtap="deleteDish">🗑️ 删除</button>
+  </view>
+
+  <!-- 做法 -->
+  <view class="card">
+    <view class="card-title">📝 做法</view>
+    <view wx:if="{{dish.steps && dish.steps.length > 0}}">
+      <view class="step-item" wx:for="{{dish.steps}}" wx:key="*this">
+        <text class="step-num">{{index + 1}}.</text>
+        <text class="step-text">{{item}}</text>
+      </view>
+    </view>
+    <text wx:else class="text-muted">暂无做法</text>
+  </view>
+
+  <!-- 备注 -->
+  <view class="card">
+    <view class="card-title">💬 备注</view>
+    <text>{{dish.note || '暂无备注'}}</text>
+  </view>
+</view>
+
+<!-- 选择餐次弹窗 -->
+<view class="modal-mask {{showMealModal ? 'show' : ''}}" bindtap="closeMealModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📋 加入今日</view>
+    <text class="modal-sub">加入哪一餐？</text>
+    <view class="meal-btns">
+      <button class="btn-primary btn-small" bindtap="addToMeal" data-meal="breakfast">🌅 早餐</button>
+      <button class="btn-primary btn-small btn-lunch" bindtap="addToMeal" data-meal="lunch">🌞 午餐</button>
+      <button class="btn-primary btn-small btn-dinner" bindtap="addToMeal" data-meal="dinner">🌙 晚餐</button>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeMealModal">取消</button>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑弹窗 -->
+<view class="modal-mask {{showEditModal ? 'show' : ''}}" bindtap="closeEditModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">{{editingId ? '✏️ 编辑菜品' : '➕ 新增菜品'}}</view>
+
+    <view class="image-upload-area">
+      <view class="preview-img" wx:if="{{editPreviewImage}}">
+        <image src="{{editPreviewImage}}" mode="aspectFill" binderror="onPreviewImageError" />
+      </view>
+      <view wx:else class="preview-placeholder">🖼️</view>
+      <view class="image-actions">
+        <view class="choose-image-btn" bindtap="chooseDishImage">选择图片</view>
+        <view class="clear-image-btn" wx:if="{{editForm.image}}" bindtap="clearDishImage">移除图片</view>
+      </view>
+    </view>
+
+    <input class="form-input" placeholder="菜品名称" value="{{editForm.name}}" bindinput="onFormChange" data-field="name" />
+    <scroll-view class="detail-category-tabs" scroll-x="{{true}}" enhanced="{{true}}" show-scrollbar="{{false}}">
+      <view class="detail-category-tabs-inner">
+        <text
+          class="category-tab {{editForm.category === item ? 'active' : ''}}"
+          wx:for="{{categories}}"
+          wx:key="*this"
+          bindtap="selectEditCategory"
+          data-category="{{item}}"
+        >{{item}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 评分 -->
+    <view class="stars-row">
+      <text class="stars-label">评分</text>
+      <view class="stars-input">
+        <text
+          class="star {{index < editForm.stars ? 'active' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          bindtap="setStars"
+          data-stars="{{item}}"
+        >★</text>
+      </view>
+    </view>
+
+    <!-- 图标 -->
+    <view class="emoji-row">
+      <text class="stars-label">图标</text>
+      <view class="emoji-grid">
+        <text
+          class="emoji-item {{editForm.emoji === item ? 'selected' : ''}}"
+          wx:for="{{customEmojis}}"
+          wx:key="*this"
+          bindtap="pickEmoji"
+          data-emoji="{{item}}"
+        >{{item}}</text>
+      </view>
+    </view>
+
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeEditModal">取消</button>
+      <button class="btn-confirm" bindtap="confirmEdit">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- 做法编辑弹窗 -->
+<view class="modal-mask {{showStepsModal ? 'show' : ''}}" bindtap="closeStepsModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📝 编辑做法</view>
+    <text class="modal-sub">每行一个步骤</text>
+    <textarea
+      class="form-textarea"
+      value="{{stepsText}}"
+      bindinput="onStepsChange"
+      rows="6"
+    />
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeStepsModal">取消</button>
+      <button class="btn-confirm" bindtap="confirmSteps">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- Toast -->
+<view class="toast {{toastShow ? 'show' : ''}}">{{toastMsg}}</view>

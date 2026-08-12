@@ -1,0 +1,289 @@
+/* pages/recipe/recipe.wxss */
+
+.page {
+  padding: 16rpx 32rpx;
+  padding-bottom: 120rpx;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0 20rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.layout-toggle {
+  display: flex;
+  padding: 4rpx;
+  background: #f0f0f3;
+  border-radius: 12rpx;
+}
+
+.layout-btn {
+  width: 56rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8rpx;
+  color: var(--text2);
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.layout-btn.active {
+  background: #fff;
+  color: var(--pri);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.category-tabs {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.category-tabs-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 100%;
+  padding-right: 24rpx;
+  box-sizing: border-box;
+}
+
+/* 菜品网格 */
+.dish-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+/* 菜品卡片 */
+.dish-card {
+  width: calc(50% - 12rpx);
+  margin-bottom: 24rpx;
+  position: relative;
+  background: #fff;
+  border-radius: 32rpx;
+  overflow: hidden;
+  border: 1px solid #f0f0f3;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.03);
+  box-sizing: border-box;
+}
+
+.checkbox {
+  position: absolute;
+  top: 12rpx;
+  left: 12rpx;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 12rpx;
+  border: 3rpx solid #c6c6c8;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #fff;
+  z-index: 2;
+}
+
+.checkbox.checked {
+  background: var(--pri);
+  border-color: var(--pri);
+}
+
+.img-placeholder {
+  height: 160rpx;
+  background: linear-gradient(145deg, #FEF3EC, #FDE8DD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img-placeholder image {
+  width: 100%;
+  height: 100%;
+}
+
+.emoji-lg {
+  font-size: 56rpx;
+}
+
+.info {
+  padding: 16rpx 20rpx 20rpx;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.meta {
+  font-size: 24rpx;
+  color: var(--text2);
+  margin-top: 4rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 紧凑列表 */
+.dish-grid.list-mode {
+  display: block;
+}
+
+.list-mode .dish-card {
+  width: 100%;
+  height: 132rpx;
+  margin-bottom: 16rpx;
+  display: flex;
+  align-items: center;
+  border-radius: 24rpx;
+}
+
+.list-mode .checkbox {
+  position: static;
+  flex: 0 0 40rpx;
+  width: 40rpx;
+  height: 40rpx;
+  margin: 0 20rpx 0 0;
+}
+
+.list-mode .img-placeholder {
+  width: 132rpx;
+  min-width: 132rpx;
+  height: 132rpx;
+}
+
+.list-mode .emoji-lg {
+  font-size: 48rpx;
+}
+
+.list-mode .info {
+  flex: 1;
+  min-width: 0;
+  padding: 20rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.list-mode .name {
+  font-size: 30rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-mode .meta {
+  margin-top: 12rpx;
+}
+
+/* 批量栏 */
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #f9f9fb;
+  border-radius: 32rpx;
+  border: 1px solid #f0f0f3;
+  margin-bottom: 24rpx;
+}
+
+.batch-count {
+  font-size: 26rpx;
+  color: var(--text2);
+  margin-right: 8rpx;
+}
+
+.btn-warn {
+  background: #ff9f0a;
+  color: #fff;
+  border: none;
+  box-shadow: none;
+}
+
+/* 批量加入弹窗 */
+.modal-sub {
+  color: var(--text2);
+  font-size: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.meal-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.meal-btns button {
+  padding: 24rpx;
+  font-size: 28rpx;
+}
+
+.btn-lunch {
+  background: #ff9f0a !important;
+  box-shadow: 0 8rpx 24rpx rgba(255, 159, 10, 0.25) !important;
+}
+
+.btn-dinner {
+  background: var(--danger) !important;
+  box-shadow: 0 8rpx 24rpx rgba(255, 59, 48, 0.25) !important;
+}
+
+/* 复用弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-mask.show { display: flex; }
+
+.modal-box {
+  background: #fff;
+  border-radius: 56rpx;
+  padding: 56rpx 48rpx 48rpx;
+  width: 90%;
+  max-width: 680rpx;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 16rpx;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 24rpx;
+  border-radius: 80rpx;
+  border: none;
+  font-weight: 600;
+  font-size: 30rpx;
+}
+
+.btn-cancel {
+  background: #f0f0f3;
+  color: #3a3a3c;
+}

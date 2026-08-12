@@ -1,0 +1,181 @@
+<!--pages/plan/plan.wxml - 规划页面-->
+<view class="page">
+  <!-- 顶栏 + 切换 -->
+  <view class="header-bar">
+    <text class="page-title">📅 规划</text>
+    <view class="view-toggle">
+      <text class="toggle-btn {{viewMode === 'week' ? 'active' : ''}}" bindtap="switchView" data-view="week">周</text>
+      <text class="toggle-btn {{viewMode === 'history' ? 'active' : ''}}" bindtap="switchView" data-view="history">历史</text>
+    </view>
+  </view>
+
+  <!-- ===== 周视图 ===== -->
+  <view wx:if="{{viewMode === 'week'}}">
+    <!-- 月份导航 -->
+    <view class="month-nav">
+      <view class="nav-btn {{weekOffset === 0 ? 'disabled' : ''}}" bindtap="shiftWeek" data-delta="-1">‹</view>
+      <text class="month-label">{{weekLabel}}</text>
+      <view class="nav-btn" bindtap="shiftWeek" data-delta="1">›</view>
+    </view>
+
+    <!-- 7天网格 -->
+    <view class="week-grid">
+      <view
+        class="week-day-row {{item.isToday ? 'today' : ''}} {{item.isPast ? 'past' : ''}}"
+        wx:for="{{weekDays}}"
+        wx:key="date"
+        bindtap="openDayEdit"
+        data-date="{{item.date}}"
+      >
+        <view class="day-label">
+          <text>{{item.weekday}}</text>
+          <text class="sub">{{item.dateDisplay}}</text>
+        </view>
+        <view class="day-meals">
+          <block wx:if="{{item.preview.length > 0}}">
+            <text class="mini-meal" wx:for="{{item.preview}}" wx:key="text" wx:for-item="p">
+              <text>{{p.icon}}</text>{{p.text}}
+            </text>
+          </block>
+          <text wx:else class="empty-meal">— 未规划 —</text>
+        </view>
+        <text wx:if="{{item.isPast}}" class="day-status past-lock">🔒</text>
+        <text wx:else class="day-status {{item.hasPlan ? '' : 'empty'}}">{{item.hasPlan ? '✓' : '⚪'}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-row">
+      <button class="btn-small btn-secondary" bindtap="clearWeek">🗑️ 清空本周</button>
+      <button class="btn-small btn-warn" bindtap="randomFillWeek" disabled="{{randomFilling}}">{{randomFilling ? '填充中…' : '🎲 随机填充'}}</button>
+    </view>
+    <view class="hint">今天及以后可编辑，过去日期仅供查看</view>
+  </view>
+
+  <!-- ===== 历史视图 ===== -->
+  <view wx:if="{{viewMode === 'history'}}">
+    <view class="month-nav">
+      <view class="nav-btn" bindtap="shiftHistoryMonth" data-delta="-1">‹</view>
+      <text class="month-label">{{historyMonthLabel}}</text>
+      <view class="nav-btn {{historyMonthOffset === 0 ? 'disabled' : ''}}" bindtap="shiftHistoryMonth" data-delta="1">›</view>
+    </view>
+
+    <view wx:if="{{historyList.length === 0}}" class="empty-state">
+      <view class="big-icon">📅</view>
+      <text>本月还没有记录</text>
+    </view>
+
+    <block wx:for="{{historyList}}" wx:key="date">
+      <view class="history-block">
+        <view class="history-date-header">
+          <text>{{item.dateDisplay}} <text class="weekday">{{item.weekday}}</text></text>
+          <text class="copy-btn" bindtap="copyHistoryToToday" data-date="{{item.date}}">📋 复制到今日</text>
+        </view>
+        <view class="history-meal-row" wx:for="{{item.meals}}" wx:key="key" wx:for-item="m">
+          <text class="h-icon">{{m.icon}}</text>
+          <text class="h-label">{{m.label}}</text>
+          <view class="h-dishes">
+            <text class="h-tag" wx:for="{{m.dishes}}" wx:key="*this" wx:for-item="d">{{d}}</text>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
+</view>
+
+<!-- ===== 日编辑弹窗 ===== -->
+<view class="modal-mask {{showDayEdit ? 'show' : ''}}" bindtap="closeDayEdit">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">{{dayEditTitle}}</view>
+
+    <view class="week-plan-grid">
+      <view class="meal-slot" wx:for="{{dayEditSlots}}" wx:key="key">
+        <text class="slot-label">{{item.icon}} {{item.label}}</text>
+        <view class="slot-dishes">
+          <block wx:if="{{item.dishes.length > 0}}">
+            <text
+              class="dish-tag"
+              wx:for="{{item.dishes}}"
+              wx:key="*this"
+              wx:for-item="d"
+              bindtap="removeFromDayEdit"
+              data-slot="{{item.key}}"
+              data-dish="{{d}}"
+            >{{d}} ✕</text>
+          </block>
+          <text wx:else class="empty-tag">—</text>
+        </view>
+        <text class="slot-add" bindtap="openAddDish" data-slot="{{item.key}}">➕</text>
+      </view>
+    </view>
+
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeDayEdit">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- ===== 菜品选择弹窗 ===== -->
+<view class="modal-mask {{showDishPicker ? 'show' : ''}}" bindtap="closeDishPicker">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">选择菜品</view>
+    <view class="search-bar">
+      <text class="search-icon">🔍</text>
+      <input placeholder="搜索..." value="{{dishSearch}}" bindinput="onDishSearch" />
+    </view>
+    <scroll-view scroll-y style="max-height:500rpx;">
+      <view
+        class="picker-item"
+        wx:for="{{filteredDishes}}"
+        wx:key="_id"
+        bindtap="addDishToSlot"
+        data-id="{{item._id}}"
+      >
+        <text>{{item.emoji}} {{item.name}}</text>
+        <text class="picker-add">+ 添加</text>
+      </view>
+      <view wx:if="{{filteredDishes.length === 0}}" class="empty-state">
+        <text>没有找到菜品</text>
+      </view>
+    </scroll-view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeDishPicker">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- ===== 今日编辑弹窗（从首页进入） ===== -->
+<view class="modal-mask {{showTodayEdit ? 'show' : ''}}" bindtap="closeTodayEdit">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">✏️ 编辑今日菜单</view>
+
+    <view class="week-plan-grid">
+      <view class="meal-slot" wx:for="{{todayEditSlots}}" wx:key="key">
+        <text class="slot-label">{{item.icon}} {{item.label}}</text>
+        <view class="slot-dishes">
+          <block wx:if="{{item.dishes.length > 0}}">
+            <text
+              class="dish-tag"
+              wx:for="{{item.dishes}}"
+              wx:key="*this"
+              wx:for-item="d"
+              bindtap="removeFromTodayEdit"
+              data-slot="{{item.key}}"
+              data-dish="{{d}}"
+            >{{d}} ✕</text>
+          </block>
+          <text wx:else class="empty-tag">—</text>
+        </view>
+        <text class="slot-add" bindtap="openTodayAddDish" data-slot="{{item.key}}">➕</text>
+      </view>
+    </view>
+
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeTodayEdit">关闭</button>
+      <button class="btn-confirm green" bindtap="saveTodayEdit">💾 保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- ===== Toast ===== -->
+<view class="toast {{toastShow ? 'show' : ''}}">{{toastMsg}}</view>

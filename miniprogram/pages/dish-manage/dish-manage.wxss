@@ -1,0 +1,185 @@
+/* pages/dish-manage/dish-manage.wxss */
+
+.page {
+  padding: 16rpx 32rpx;
+  padding-bottom: 80rpx;
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0 20rpx;
+}
+
+.back-bar {
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: var(--pri);
+  color: #fff;
+  border-radius: 40rpx;
+  height: 56rpx;
+  margin: 0 0 0 auto;
+  padding: 0 18rpx;
+  font-weight: 600;
+  font-size: 24rpx;
+  line-height: 56rpx;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.category-tabs {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.category-tabs-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 16rpx;
+  min-width: 100%;
+  padding-right: 24rpx;
+  box-sizing: border-box;
+}
+
+.batch-bar {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx 24rpx;
+  background: #f9f9fb;
+  border-radius: 32rpx;
+  border: 1px solid #f0f0f3;
+  margin-bottom: 24rpx;
+}
+
+.batch-count {
+  font-size: 26rpx;
+  color: var(--text2);
+  margin-right: 8rpx;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid #ff3b3040;
+}
+
+/* 管理列表 */
+.manage-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 8rpx;
+  border-bottom: 1px solid #f5f5f8;
+  gap: 20rpx;
+}
+
+.manage-item:last-child {
+  border-bottom: none;
+}
+
+.dm-checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 8rpx;
+  border: 3rpx solid #c6c6c8;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dm-checkbox.checked {
+  background: var(--pri);
+  border-color: var(--pri);
+}
+
+.dm-thumb {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  background: #f0f0f3;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+.dm-thumb image {
+  width: 100%;
+  height: 100%;
+}
+
+.dm-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.dm-category {
+  font-size: 24rpx;
+  color: var(--text2);
+  background: #f0f0f3;
+  padding: 4rpx 20rpx;
+  border-radius: 60rpx;
+}
+
+.dm-stars {
+  font-size: 22rpx;
+}
+
+.dm-actions {
+  display: flex;
+  gap: 8rpx;
+}
+
+.edit-dm {
+  color: var(--pri);
+  background: var(--pri-light);
+  padding: 4rpx 16rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.del-dm {
+  color: var(--danger);
+  background: #ff3b3010;
+  padding: 4rpx 16rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+/* 弹窗复用 */
+.modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.4); display:none; justify-content:center; align-items:center; z-index:1000; }
+.modal-mask.show { display:flex; }
+.modal-box { background:#fff; border-radius:56rpx; padding:56rpx 48rpx 48rpx; width:90%; max-width:680rpx; max-height:85vh; overflow-y:auto; }
+.modal-title { font-size:40rpx; font-weight:600; margin-bottom:32rpx; }
+.modal-actions { display:flex; gap:24rpx; margin-top:16rpx; }
+.btn-cancel { flex:1; padding:24rpx; border-radius:80rpx; border:none; font-weight:600; font-size:30rpx; background:#f0f0f3; color:#3a3a3c; }
+
+.picker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 8rpx;
+  border-bottom: 1px solid #f5f5f8;
+}
+
+.picker-add {
+  color: var(--pri);
+  font-size: 26rpx;
+}

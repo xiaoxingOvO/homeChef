@@ -1,0 +1,398 @@
+/* pages/plan/plan.wxss */
+
+.page {
+  padding: 16rpx 32rpx;
+  padding-bottom: 120rpx;
+}
+
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0 20rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8rpx;
+  background: #f0f0f3;
+  border-radius: 60rpx;
+  padding: 6rpx;
+}
+
+.toggle-btn {
+  padding: 8rpx 28rpx;
+  border-radius: 60rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.toggle-btn.active {
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 月份导航 */
+.month-nav {
+  display: grid;
+  grid-template-columns: 1fr 260rpx 1fr;
+  align-items: center;
+  min-height: 40rpx;
+  padding: 16rpx 0 24rpx;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5F2EF;
+  border: none;
+  border-radius: 40rpx;
+  width: 56rpx;
+  min-width: 56rpx;
+  height: 40rpx;
+  margin: 0;
+  padding: 0;
+  font-size: 30rpx;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.nav-btn.disabled {
+  color: #c6c6c8;
+  background: #f7f7f8;
+  opacity: 0.55;
+}
+
+.month-nav .nav-btn:first-child {
+  justify-self: center;
+}
+
+.month-nav .nav-btn:last-child {
+  justify-self: center;
+}
+
+.month-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 28rpx;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+/* 周网格 */
+.week-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.week-day-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: #fff;
+  border-radius: 28rpx;
+  padding: 20rpx 24rpx;
+  border: 1px solid #f0f0f3;
+}
+
+.week-day-row.today {
+  border-color: var(--pri);
+  background: #FFFBF8;
+  box-shadow: 0 0 0 6rpx rgba(255, 107, 61, 0.06);
+}
+
+.week-day-row.past {
+  background: #f7f7f8;
+  border-color: #eeeeef;
+  color: var(--text2);
+}
+
+.week-day-row.past .day-meals {
+  opacity: 0.72;
+}
+
+.past-lock {
+  color: var(--text2);
+  filter: grayscale(1);
+}
+
+.day-label {
+  font-weight: 600;
+  font-size: 28rpx;
+  min-width: 80rpx;
+  color: var(--text);
+}
+
+.day-label .sub {
+  font-weight: 400;
+  font-size: 20rpx;
+  color: var(--text2);
+  display: block;
+}
+
+.day-meals {
+  flex: 1;
+  display: flex;
+  gap: 8rpx;
+  flex-wrap: wrap;
+}
+
+.mini-meal {
+  font-size: 22rpx;
+  background: #f0f0f3;
+  padding: 4rpx 20rpx;
+  border-radius: 60rpx;
+  color: #3a3a3c;
+  max-width: 160rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty-meal {
+  font-size: 22rpx;
+  color: #c6c6c8;
+}
+
+.day-status {
+  font-size: 22rpx;
+  color: var(--success);
+}
+
+.day-status.empty {
+  color: #c6c6c8;
+}
+
+/* 操作按钮行 */
+.action-row {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.action-row button {
+  flex: 1;
+  padding: 20rpx;
+  font-size: 26rpx;
+}
+
+.btn-warn {
+  background: #ff9f0a;
+  color: #fff;
+  border: none;
+  border-radius: 60rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 159, 10, 0.25);
+}
+
+.hint {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: var(--text2);
+  text-align: center;
+}
+
+/* 历史 */
+.history-block {
+  margin-bottom: 32rpx;
+}
+
+.history-date-header {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text);
+  padding: 24rpx 0 16rpx;
+  border-bottom: 2px solid #FFD5C5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-date-header .weekday {
+  font-weight: 400;
+  font-size: 28rpx;
+  color: var(--text2);
+}
+
+.copy-btn {
+  font-size: 24rpx;
+  color: var(--pri);
+  background: var(--pri-light);
+  padding: 4rpx 24rpx;
+  border-radius: 40rpx;
+}
+
+.history-meal-row {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+  gap: 20rpx;
+  border-bottom: 1px solid #f5f5f8;
+}
+
+.history-meal-row:last-child {
+  border-bottom: none;
+}
+
+.h-icon {
+  font-size: 32rpx;
+  min-width: 56rpx;
+}
+
+.h-label {
+  font-size: 26rpx;
+  font-weight: 500;
+  min-width: 72rpx;
+  color: var(--text2);
+}
+
+.h-dishes {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.h-tag {
+  font-size: 26rpx;
+  background: #f0f0f3;
+  padding: 2rpx 20rpx;
+  border-radius: 60rpx;
+  color: var(--text);
+}
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-mask.show {
+  display: flex;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 56rpx;
+  padding: 56rpx 48rpx 48rpx;
+  width: 90%;
+  max-width: 680rpx;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 32rpx;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 16rpx;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 24rpx;
+  border-radius: 80rpx;
+  border: none;
+  font-weight: 600;
+  font-size: 30rpx;
+}
+
+.btn-cancel {
+  background: #f0f0f3;
+  color: #3a3a3c;
+}
+
+.btn-confirm {
+  background: var(--pri);
+  color: #fff;
+}
+
+.btn-confirm.green {
+  background: var(--success);
+}
+
+/* 日编辑 */
+.week-plan-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin: 16rpx 0;
+}
+
+.meal-slot {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 12rpx 0;
+  border-bottom: 1px solid #f5f5f8;
+}
+
+.meal-slot:last-child {
+  border-bottom: none;
+}
+
+.slot-label {
+  font-weight: 600;
+  font-size: 28rpx;
+  min-width: 96rpx;
+  color: var(--text);
+}
+
+.slot-dishes {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.slot-dishes .dish-tag {
+  font-size: 26rpx;
+  background: #f0f0f3;
+  padding: 4rpx 20rpx;
+  border-radius: 60rpx;
+}
+
+.slot-dishes .empty-tag {
+  color: #c6c6c8;
+  font-size: 26rpx;
+}
+
+.slot-add {
+  color: var(--pri);
+  font-size: 36rpx;
+  padding: 4rpx 16rpx;
+}
+
+/* 菜品选择 */
+.picker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  border-bottom: 1px solid #f5f5f8;
+}
+
+.picker-add {
+  color: var(--pri);
+  font-size: 26rpx;
+}

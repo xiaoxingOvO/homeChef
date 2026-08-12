@@ -1,0 +1,3 @@
+# Project exclude paths
+/miniprogram/node_modules/
+/miniprogram/node_modules/miniprogram-api-typings/

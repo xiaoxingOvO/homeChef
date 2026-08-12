@@ -1,0 +1,81 @@
+<!--pages/profile/profile.wxml - 我的-->
+<view class="page">
+  <!-- 头像区 -->
+  <view class="profile-header">
+    <view class="big-avatar">👤</view>
+    <view>
+      <text class="profile-name">我</text>
+      <text class="profile-sub">每日菜单 · 个人版</text>
+    </view>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="card">
+    <view class="menu-row" bindtap="goToDishManage">
+      <view class="menu-left">📖 菜品管理</view>
+      <text class="menu-arrow">{{dishCount}} 道 ›</text>
+    </view>
+    <view class="menu-row" bindtap="goToCategoryManage">
+      <view class="menu-left">📂 分类管理</view>
+      <text class="menu-arrow">{{categoryCount}} 个 ›</text>
+    </view>
+    <view class="menu-row" bindtap="goToEmojiManage">
+      <view class="menu-left">😊 图标管理</view>
+      <text class="menu-arrow">{{emojiCount}} 个 ›</text>
+    </view>
+    <view class="menu-row" bindtap="openTotalRecords">
+      <view class="menu-left">📊 总记录</view>
+      <text class="menu-arrow">已规划 {{totalDays}} 天 ›</text>
+    </view>
+    <view class="menu-row" bindtap="openRanking">
+      <view class="menu-left">⭐ 最常吃</view>
+      <text class="menu-arrow">{{mostEaten}} ›</text>
+    </view>
+  </view>
+
+  <text class="footer-text">每日菜单 v1.0 · 两个人的小餐桌</text>
+</view>
+
+<!-- 排名弹窗 -->
+<view class="modal-mask {{showRankModal ? 'show' : ''}}" bindtap="closeRankModal">
+  <view class="modal-box rank-modal-box" catchtap="noop">
+    <view class="modal-title">🏆 最常吃排名</view>
+    <scroll-view class="rank-list-scroll" scroll-y="{{true}}" enhanced="{{true}}">
+      <view wx:if="{{rankList.length > 0}}">
+        <view class="rank-item" wx:for="{{rankList}}" wx:key="name">
+          <text class="rank-num">#{{index + 1}}</text>
+          <text class="rank-emoji">{{item.emoji}}</text>
+          <text class="rank-name">{{item.name}}</text>
+          <text class="rank-count">{{item.count}} 次</text>
+        </view>
+      </view>
+      <view wx:else class="empty-state">
+        <text>还没有做菜记录</text>
+      </view>
+    </scroll-view>
+    <view class="modal-actions rank-modal-actions">
+      <button class="btn-cancel" bindtap="closeRankModal">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- 总记录弹窗 -->
+<view class="modal-mask {{showRecordsModal ? 'show' : ''}}" bindtap="closeRecordsModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📊 所有规划记录</view>
+    <scroll-view scroll-y style="max-height:500rpx;">
+      <view wx:if="{{recordsList.length > 0}}">
+        <view class="record-item" wx:for="{{recordsList}}" wx:key="date">
+          <text class="record-date">📅 {{item.dateDisplay}} {{item.weekday}}</text>
+          <text class="record-count">{{item.total}} 道菜</text>
+        </view>
+      </view>
+      <view wx:else class="empty-state">
+        <text>还没有规划记录</text>
+      </view>
+    </scroll-view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeRecordsModal">关闭</button>
+    </view>
+  </view>
+</view>

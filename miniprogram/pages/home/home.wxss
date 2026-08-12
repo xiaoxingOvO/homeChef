@@ -1,0 +1,129 @@
+/* pages/home/home.wxss */
+
+.page {
+  padding: 16rpx 32rpx;
+  padding-bottom: 120rpx;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12rpx 0 28rpx;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-icon {
+  font-size: 48rpx;
+}
+
+.header-title {
+  font-weight: 600;
+  font-size: 40rpx;
+  margin-left: 12rpx;
+}
+
+.header-date {
+  font-size: 28rpx;
+  color: var(--text2);
+}
+
+/* 今日菜单 */
+.meal-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1px solid #f5f5f8;
+  gap: 20rpx;
+}
+
+.meal-row:last-child {
+  border-bottom: none;
+}
+
+.meal-icon {
+  font-size: 44rpx;
+  min-width: 72rpx;
+}
+
+.meal-label {
+  font-weight: 600;
+  font-size: 28rpx;
+  min-width: 88rpx;
+  color: var(--text);
+}
+
+.meal-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.dish-tag {
+  background: #f0f0f3;
+  padding: 4rpx 24rpx;
+  border-radius: 60rpx;
+  font-size: 26rpx;
+  color: var(--text);
+}
+
+.empty-tag {
+  color: #c6c6c8;
+  font-size: 26rpx;
+}
+
+/* 徽章容器 */
+.badge-row {
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.week-preview-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8rpx;
+}
+
+.week-badge {
+  min-width: 0;
+  height: 60rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16rpx;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.week-badge.green {
+  color: #27AE60;
+  background: #E8F8EF;
+}
+
+.week-badge.gray {
+  color: var(--text2);
+  background: #F5F2EF;
+}
+
+.week-name {
+  position: relative;
+  z-index: 1;
+  display: block;
+  color: inherit;
+  font-size: 22rpx;
+  font-weight: 600;
+  line-height: 60rpx;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: #c6c6c8;
+  font-size: 26rpx;
+}

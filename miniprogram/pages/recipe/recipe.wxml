@@ -1,0 +1,115 @@
+<!--pages/recipe/recipe.wxml - 菜谱-->
+<view class="page">
+  <view class="page-title-row">
+    <text class="page-title">📖 菜谱</text>
+    <view class="layout-toggle" aria-label="切换菜谱布局">
+      <view
+        class="layout-btn {{layoutMode === 'grid' ? 'active' : ''}}"
+        bindtap="switchLayout"
+        data-mode="grid"
+        aria-label="宫格视图"
+      >▦</view>
+      <view
+        class="layout-btn {{layoutMode === 'list' ? 'active' : ''}}"
+        bindtap="switchLayout"
+        data-mode="list"
+        aria-label="列表视图"
+      >☷</view>
+    </view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="search-bar">
+    <text class="search-icon">🔍</text>
+    <input placeholder="搜索菜品..." value="{{searchText}}" bindinput="onSearch" />
+  </view>
+
+  <!-- 分类标签 -->
+  <scroll-view
+    class="category-tabs"
+    scroll-x="{{true}}"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+  >
+    <view class="category-tabs-inner">
+      <text
+        class="category-tab {{currentCategory === item ? 'active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="*this"
+        bindtap="selectCategory"
+        data-cat="{{item}}"
+      >{{item}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 批量操作栏 -->
+  <view class="batch-bar" wx:if="{{selectedCount > 0}}">
+    <text class="batch-count">已选 {{selectedCount}} 道</text>
+    <button class="btn-sm btn-warn" bindtap="openBatchAdd">📋 加入今日</button>
+  </view>
+
+  <!-- 菜品网格 -->
+  <view class="dish-grid {{layoutMode === 'list' ? 'list-mode' : ''}}" wx:if="{{dishes.length > 0}}">
+    <view
+      class="dish-card"
+      wx:for="{{dishes}}"
+      wx:key="_id"
+    >
+      <!-- 图片区（点击进详情） -->
+      <view class="img-placeholder" bindtap="openDetail" data-id="{{item._id}}">
+        <image
+          wx:if="{{item.displayImage}}"
+          src="{{item.displayImage}}"
+          mode="aspectFill"
+          lazy-load="{{true}}"
+          binderror="onDishImageError"
+          data-id="{{item._id}}"
+        />
+        <text wx:else class="emoji-lg">{{item.emoji}}</text>
+      </view>
+
+      <!-- 信息 -->
+      <view class="info" bindtap="openDetail" data-id="{{item._id}}">
+        <text class="name">{{item.name}}</text>
+        <view class="meta">
+          <text class="stars">{{item.starsText}}</text>
+          <text>{{item.count}}次</text>
+        </view>
+      </view>
+
+      <!-- 选择框：列表模式显示在最右侧 -->
+      <view
+        class="checkbox {{item.selected ? 'checked' : ''}}"
+        catchtap="toggleSelect"
+        data-id="{{item._id}}"
+      >
+        <text wx:if="{{item.selected}}">✓</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-state">
+    <view class="big-icon">📖</view>
+    <text>没有找到菜品</text>
+  </view>
+</view>
+
+<!-- 批量加入弹窗 -->
+<view class="modal-mask {{showBatchModal ? 'show' : ''}}" bindtap="closeBatchModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📋 批量加入今日</view>
+    <text class="modal-sub">已选 {{selectedCount}} 道菜，加入哪一餐？</text>
+    <view class="meal-btns">
+      <button class="btn-primary btn-small" bindtap="batchAddToMeal" data-meal="breakfast">🌅 早餐</button>
+      <button class="btn-primary btn-small btn-lunch" bindtap="batchAddToMeal" data-meal="lunch">🌞 午餐</button>
+      <button class="btn-primary btn-small btn-dinner" bindtap="batchAddToMeal" data-meal="dinner">🌙 晚餐</button>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeBatchModal">取消</button>
+    </view>
+  </view>
+</view>
+
+<!-- Toast -->
+<view class="toast {{toastShow ? 'show' : ''}}">{{toastMsg}}</view>

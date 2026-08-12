@@ -1,0 +1,189 @@
+/* pages/profile/profile.wxss */
+
+.page {
+  padding: 16rpx 32rpx;
+  padding-bottom: 120rpx;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 36rpx;
+  padding: 24rpx 0 40rpx;
+}
+
+.big-avatar {
+  width: 144rpx;
+  height: 144rpx;
+  border-radius: 80rpx;
+  background: linear-gradient(145deg, #FEF3EC, #FDE8DD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 68rpx;
+}
+
+.profile-name {
+  font-size: 40rpx;
+  font-weight: 700;
+  display: block;
+}
+
+.profile-sub {
+  color: var(--text2);
+  font-size: 28rpx;
+}
+
+.menu-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 8rpx;
+  border-bottom: 1px solid #f0f0f3;
+}
+
+.menu-row:last-child {
+  border-bottom: none;
+}
+
+.menu-left {
+  font-size: 30rpx;
+}
+
+.menu-arrow {
+  color: var(--text2);
+}
+
+.footer-text {
+  display: block;
+  text-align: center;
+  color: #c6c6c8;
+  font-size: 24rpx;
+  padding: 32rpx 0;
+}
+
+/* 弹窗 */
+.modal-mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-mask.show { display: flex; }
+
+.modal-box {
+  background: #fff;
+  border-radius: 56rpx;
+  padding: 56rpx 48rpx 48rpx;
+  width: 90%;
+  max-width: 680rpx;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.rank-modal-box {
+  height: 78vh;
+  max-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.rank-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.rank-modal-actions {
+  flex-shrink: 0;
+  padding-top: 16rpx;
+  margin-top: 0;
+}
+
+.modal-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 32rpx;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 16rpx;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 24rpx;
+  border-radius: 80rpx;
+  border: none;
+  font-weight: 600;
+  font-size: 30rpx;
+  background: #f0f0f3;
+  color: #3a3a3c;
+}
+
+/* 排名 */
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 8rpx;
+  border-bottom: 1px solid #f5f5f8;
+  gap: 28rpx;
+}
+
+.rank-item:last-child {
+  border-bottom: none;
+}
+
+.rank-num {
+  font-weight: 700;
+  color: var(--text2);
+  font-size: 28rpx;
+  min-width: 60rpx;
+}
+
+.rank-emoji {
+  font-size: 40rpx;
+}
+
+.rank-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.rank-count {
+  font-size: 26rpx;
+  color: var(--text2);
+}
+
+/* 记录 */
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 8rpx;
+  border-bottom: 1px solid #f5f5f8;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-date {
+  font-weight: 500;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.record-count {
+  font-size: 26rpx;
+  color: var(--text2);
+}

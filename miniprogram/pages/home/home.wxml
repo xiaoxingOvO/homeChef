@@ -1,0 +1,55 @@
+<!--pages/home/home.wxml - 首页-->
+<view class="page">
+  <!-- 顶栏 -->
+  <view class="header">
+    <view class="header-left">
+      <text class="header-icon">🍽️</text>
+      <text class="header-title">每日菜单</text>
+    </view>
+    <text class="header-date">{{dateDisplay}}</text>
+  </view>
+
+  <!-- 今日菜单卡片 -->
+  <view class="card">
+    <view class="card-title">
+      <text>📋 今日菜单</text>
+      <text class="more" bindtap="openEditToday">✏️ 编辑</text>
+    </view>
+
+    <view class="meal-row" wx:for="{{todayMeals}}" wx:key="key">
+      <text class="meal-icon">{{item.icon}}</text>
+      <text class="meal-label">{{item.label}}</text>
+      <view class="meal-content">
+        <block wx:if="{{item.dishes.length > 0}}">
+            <text class="dish-tag" wx:for="{{item.dishes}}" wx:key="*this" wx:for-item="d" bindtap="openTodayDish" data-dish="{{d}}">{{d}}</text>
+        </block>
+        <text wx:else class="empty-tag">— 未规划 —</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最近吃过 -->
+  <view class="card">
+    <view class="card-title">🕒 最近吃过</view>
+    <view class="badge-row">
+      <block wx:if="{{recentEaten.length > 0}}">
+        <text class="badge" wx:for="{{recentEaten}}" wx:key="*this">{{item}}</text>
+      </block>
+      <text wx:else class="text-muted">还没有记录</text>
+    </view>
+  </view>
+
+  <!-- 本周预览 -->
+  <view class="card">
+    <view class="card-title">📅 本周预览</view>
+    <view class="week-preview-row">
+      <view class="week-badge {{weekPreview[0].cls}}"><text class="week-name">周一</text></view>
+      <view class="week-badge {{weekPreview[1].cls}}"><text class="week-name">周二</text></view>
+      <view class="week-badge {{weekPreview[2].cls}}"><text class="week-name">周三</text></view>
+      <view class="week-badge {{weekPreview[3].cls}}"><text class="week-name">周四</text></view>
+      <view class="week-badge {{weekPreview[4].cls}}"><text class="week-name">周五</text></view>
+      <view class="week-badge {{weekPreview[5].cls}}"><text class="week-name">周六</text></view>
+      <view class="week-badge {{weekPreview[6].cls}}"><text class="week-name">周日</text></view>
+    </view>
+  </view>
+</view>
