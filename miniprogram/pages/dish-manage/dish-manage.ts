@@ -1,9 +1,11 @@
 // pages/dish-manage/dish-manage.ts
-import { getDishes, getCategories, deleteDish, batchDeleteDishes, batchUpdateCategory } from '../../utils/db'
+import { DB_QUERY_LIMIT, getDishesPage, getCategories, deleteDish, batchDeleteDishes, batchUpdateCategory } from '../../utils/db'
 import { resolveDishImages } from '../../utils/image-cache'
 
 let managedSelectedIds = new Set<string>()
 let managedAllDishes: Array<Dish & { displayImage: string }> = []
+let managedSearchTimer: number | undefined
+const MANAGE_PAGE_SIZE = DB_QUERY_LIMIT
 
 Page({
   data: {
@@ -16,43 +18,107 @@ Page({
 
     toastShow: false,
     toastMsg: '',
+    loading: true,
+    loadingMore: false,
+    hasMore: true,
+  },
+
+  onLoad() {
+    managedAllDishes = []
+    managedSelectedIds = new Set()
+    this.setData({
+      loading: true,
+      loadingMore: false,
+      dishes: [],
+      selectedCount: 0,
+    })
   },
 
   async onShow() {
-    await this.loadData()
+    this.setData({ loading: true })
+    void this.loadData()
   },
 
   async loadData() {
     try {
-      const [dishes, categories] = await Promise.all([getDishes(), getCategories()])
+      this.setData({ loading: true, loadingMore: false })
+      const [dishes, categories] = await Promise.all([
+        getDishesPage({
+          limit: MANAGE_PAGE_SIZE,
+          category: this.data.currentCategory,
+          search: this.data.searchText,
+        }),
+        getCategories(),
+      ])
       const catNames = categories.map((c) => c.name)
       const currentCategory = catNames.includes(this.data.currentCategory)
         ? this.data.currentCategory
         : '全部'
       managedAllDishes = await resolveDishImages(dishes)
       this.setData({
+        dishes: [],
         categories: ['全部', ...catNames],
         currentCategory,
+        hasMore: dishes.length === MANAGE_PAGE_SIZE,
+      }, () => {
+        this.filterDishes(managedAllDishes)
+        this.setData({ loading: false })
+        wx.hideLoading()
+      })
+    } catch (err) {
+      console.error('加载失败:', err)
+      this.setData({ loading: false })
+      wx.hideLoading()
+    }
+  },
+
+  async loadFirstPage() {
+    try {
+      this.setData({ loading: true, loadingMore: false, hasMore: true })
+      const dishes = await getDishesPage({
+        limit: MANAGE_PAGE_SIZE,
+        category: this.data.currentCategory,
+        search: this.data.searchText,
+      })
+      managedAllDishes = await resolveDishImages(dishes)
+      this.setData({
+        hasMore: dishes.length === MANAGE_PAGE_SIZE,
+      }, () => {
+        this.filterDishes(managedAllDishes)
+        this.setData({ loading: false })
+      })
+    } catch (err) {
+      console.error('加载失败:', err)
+      this.setData({ loading: false })
+    }
+  },
+
+  async loadMoreDishes() {
+    if (this.data.loadingMore || !this.data.hasMore) return
+    this.setData({ loadingMore: true })
+    try {
+      const dishes = await getDishesPage({
+        skip: managedAllDishes.length,
+        limit: MANAGE_PAGE_SIZE,
+        category: this.data.currentCategory,
+        search: this.data.searchText,
+      })
+      const resolved = await resolveDishImages(dishes)
+      managedAllDishes = [...managedAllDishes, ...resolved]
+      this.setData({
+        hasMore: dishes.length === MANAGE_PAGE_SIZE,
       }, () => {
         this.filterDishes(managedAllDishes)
       })
     } catch (err) {
-      console.error('加载失败:', err)
+      console.error('加载更多失败:', err)
+    } finally {
+      this.setData({ loadingMore: false })
     }
   },
 
   filterDishes(allDishes: Dish[]) {
-    const { searchText, currentCategory } = this.data
-
-    let filtered = allDishes
-    if (currentCategory !== '全部') {
-      filtered = filtered.filter((d) => d.category === currentCategory)
-    }
-    if (searchText) {
-      filtered = filtered.filter((d) => d.name.includes(searchText.toLowerCase()))
-    }
-
-    const enhanced = filtered.map((d) => ({
+    const enhanced = allDishes.map((d) => ({
       ...d,
       selected: managedSelectedIds.has(d._id!),
       starsText: '⭐'.repeat(d.stars),
@@ -62,14 +128,16 @@ Page({
   },
 
   onSearch(e: any) {
-    this.setData({ searchText: e.detail.value }, () => {
-      this.filterDishes(managedAllDishes)
-    })
+    this.setData({ searchText: e.detail.value })
+    if (managedSearchTimer) clearTimeout(managedSearchTimer)
+    managedSearchTimer = setTimeout(() => {
+      void this.loadFirstPage()
+    }, 300) as unknown as number
   },
 
   selectCategory(e: any) {
     this.setData({ currentCategory: e.currentTarget.dataset.cat }, () => {
-      this.filterDishes(managedAllDishes)
+      void this.loadFirstPage()
     })
   },
 
@@ -161,5 +229,9 @@ Page({
     setTimeout(() => {
       this.setData({ toastShow: false })
     }, 1500)
+  },
+
+  onReachBottom() {
+    void this.loadMoreDishes()
   },
 })

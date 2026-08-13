@@ -2,7 +2,14 @@
 import {
   getToday, formatDateDisplay, getWeekday, getWeekStart, formatDate, MEALS,
 } from '../../utils/util'
-import { getDishes, getMealPlans } from '../../utils/db'
+import {
+  DB_QUERY_LIMIT,
+  countDishes,
+  getCategories,
+  getDishByName,
+  getDishesPage,
+  getMealPlans,
+} from '../../utils/db'
 
 const HOME_CACHE_KEY = 'dailyMenuHomeCache'
 
@@ -28,6 +35,9 @@ Page({
 
   async onShow() {
     this.renderCachedHome()
+    setTimeout(() => {
+      this.prewarmTabData()
+    }, 0)
     await this.loadAll()
   },
 
@@ -100,6 +110,26 @@ Page({
     }
   },
 
+  prewarmTabData() {
+    // 不 await：只提前填充菜谱页首屏缓存，不能拖慢首页自身响应。
+    // 规划页当前周数据由 loadAll() 的 allDates 查询自然写入缓存，避免重复云请求。
+    void (async () => {
+      const categoriesPromise = getCategories()
+      await Promise.all([
+        getDishesPage({ limit: DB_QUERY_LIMIT }),
+        countDishes(),
+        categoriesPromise,
+      ])
+
+      const categories = await categoriesPromise
+      void Promise.all(categories.map((category) =>
+        getDishesPage({ limit: DB_QUERY_LIMIT, category: category.name })
+      )).catch(() => {})
+    })().catch((err) => {
+      console.warn('预热分页数据失败:', err)
+    })
+  },
+
   renderToday(plan: MealPlan | undefined) {
     const meals = MEALS.map((m) => ({
       key: m.key,
@@ -161,8 +191,7 @@ Page({
     if (!name) return
 
     try {
-      const dishes = await getDishes()
-      const dish = dishes.find((item) => item.name === name)
+      const dish = await getDishByName(name)
       if (!dish?._id) {
         wx.showToast({ title: '菜品已不存在', icon: 'none' })
         return

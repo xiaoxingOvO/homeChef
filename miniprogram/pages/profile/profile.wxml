@@ -1,39 +1,215 @@
 <!--pages/profile/profile.wxml - 我的-->
 <view class="page">
-  <!-- 头像区 -->
-  <view class="profile-header">
-    <view class="big-avatar">👤</view>
-    <view>
-      <text class="profile-name">我</text>
-      <text class="profile-sub">每日菜单 · 个人版</text>
+  <view wx:if="{{currentPanel === 'menu'}}">
+    <view class="profile-header">
+      <image class="big-avatar" src="/assets/app-logo.jpeg" mode="aspectFill" />
+      <view>
+        <text class="profile-name">家有小厨记</text>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="menu-row" bindtap="goToDishManage">
+        <view class="menu-left">📖 菜品管理</view>
+        <text class="menu-arrow">{{dishCount}} 道 ›</text>
+      </view>
+      <view class="menu-row" bindtap="goToCategoryManage">
+        <view class="menu-left">📂 分类管理</view>
+        <text class="menu-arrow">{{categoryCount}} 个 ›</text>
+      </view>
+      <view class="menu-row" bindtap="goToEmojiManage">
+        <view class="menu-left">😊 图标管理</view>
+        <text class="menu-arrow">{{emojiCount}} 个 ›</text>
+      </view>
+      <view class="menu-row" bindtap="openTotalRecords">
+        <view class="menu-left">📊 总记录</view>
+        <text class="menu-arrow">已规划 {{totalDays}} 天 ›</text>
+      </view>
+      <view class="menu-row" bindtap="openRanking">
+        <view class="menu-left">⭐ 最常吃</view>
+        <text class="menu-arrow">{{mostEaten}} ›</text>
+      </view>
+    </view>
+
+    <text class="footer-text">家有小厨记 v1.0</text>
+  </view>
+
+  <view wx:elif="{{currentPanel === 'dish'}}">
+    <view class="panel-header">
+      <view class="panel-back" bindtap="backToMenu">← 菜品管理</view>
+      <view class="btn-add" bindtap="openAddDish">＋ 新增</view>
+    </view>
+
+    <view class="search-bar">
+      <text class="search-icon">🔍</text>
+      <input placeholder="搜索菜品..." value="{{dishManageSearchText}}" bindinput="onDishManageSearch" />
+    </view>
+
+    <scroll-view
+      class="category-tabs"
+      scroll-x="{{true}}"
+      enhanced="{{true}}"
+      show-scrollbar="{{false}}"
+    >
+      <view class="category-tabs-inner">
+        <text
+          class="category-tab {{dishManageCurrentCategory === item ? 'active' : ''}}"
+          wx:for="{{dishManageCategories}}"
+          wx:key="*this"
+          bindtap="selectDishManageCategory"
+          data-cat="{{item}}"
+        >{{item}}</text>
+      </view>
+    </scroll-view>
+
+    <view class="batch-bar" wx:if="{{dishManageSelectedCount > 0}}">
+      <text class="batch-count">已选 {{dishManageSelectedCount}} 道</text>
+      <button class="btn-sm btn-outline" bindtap="openDishBatchCategory">📂 改分类</button>
+      <button class="btn-sm btn-danger-outline" bindtap="batchDelete">🗑️ 删除</button>
+    </view>
+
+    <view wx:if="{{dishManageLoading}}" class="empty-state">
+      <view class="big-icon">⏳</view>
+      <text>加载中…</text>
+    </view>
+    <view wx:elif="{{dishManageDishes.length > 0}}">
+      <view class="manage-item" wx:for="{{dishManageDishes}}" wx:key="_id">
+        <view class="dm-checkbox {{item.selected ? 'checked' : ''}}" bindtap="toggleDishSelect" data-id="{{item._id}}">
+          <text wx:if="{{item.selected}}">✓</text>
+        </view>
+        <view class="dm-thumb">
+          <image
+            wx:if="{{item.displayImage}}"
+            src="{{item.displayImage}}"
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onDishImageError"
+            data-id="{{item._id}}"
+          />
+          <text wx:else>{{item.emoji}}</text>
+        </view>
+        <text class="dm-name">{{item.name}}</text>
+        <text class="dm-category">{{item.category}}</text>
+        <text class="dm-stars">{{item.starsText}}</text>
+        <view class="dm-actions">
+          <text class="edit-dm" bindtap="editDish" data-id="{{item._id}}">✏️</text>
+          <text class="del-dm" bindtap="deleteOne" data-id="{{item._id}}" data-name="{{item.name}}">🗑️</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="empty-state">
+      <view class="big-icon">📖</view>
+      <text>没有匹配的菜品</text>
+    </view>
+
+    <view class="list-footer" wx:if="{{dishManageDishes.length > 0}}">
+      <text>{{dishManageLoadingMore ? '加载中…' : (dishManageHasMore ? '上拉加载更多' : '已显示全部')}}</text>
     </view>
   </view>
 
-  <!-- 菜单列表 -->
-  <view class="card">
-    <view class="menu-row" bindtap="goToDishManage">
-      <view class="menu-left">📖 菜品管理</view>
-      <text class="menu-arrow">{{dishCount}} 道 ›</text>
+  <view wx:elif="{{currentPanel === 'category'}}">
+    <view class="panel-header">
+      <view class="panel-back" bindtap="backToMenu">← 分类管理</view>
+      <view class="btn-add" bindtap="openCategoryAdd">＋ 新增</view>
     </view>
-    <view class="menu-row" bindtap="goToCategoryManage">
-      <view class="menu-left">📂 分类管理</view>
-      <text class="menu-arrow">{{categoryCount}} 个 ›</text>
+
+    <view wx:if="{{categoryManageLoading}}" class="empty-state">
+      <view class="big-icon">⏳</view>
+      <text>加载中…</text>
     </view>
-    <view class="menu-row" bindtap="goToEmojiManage">
-      <view class="menu-left">😊 图标管理</view>
-      <text class="menu-arrow">{{emojiCount}} 个 ›</text>
+    <view wx:else class="card category-list">
+      <view
+        class="category-item {{categoryManageDragActive && categoryManageDraggingIndex === index ? 'dragging' : ''}}"
+        style="{{categoryManageDragActive && categoryManageDraggingIndex === index ? 'transform: translateY(' + categoryManageDragTranslateY + 'px);' : ''}}"
+        wx:for="{{categoryManageCategories}}"
+        wx:key="_id"
+      >
+        <view class="cat-name">
+          <text>{{item.name}}</text>
+          <text class="badge system" wx:if="{{item.isSystem}}">系统</text>
+        </view>
+        <view class="cat-actions">
+          <view
+            class="edit-btn {{item.isSystem ? 'disabled' : ''}}"
+            bindtap="openCategoryEdit"
+            data-id="{{item._id}}"
+            data-name="{{item.name}}"
+            data-system="{{item.isSystem}}"
+          >✎</view>
+          <view
+            class="del-btn {{item.isSystem ? 'disabled' : ''}}"
+            bindtap="deleteCategoryItem"
+            data-id="{{item._id}}"
+            data-name="{{item.name}}"
+            data-system="{{item.isSystem}}"
+          >✕</view>
+          <view
+            class="drag-handle"
+            bindlongpress="onCategoryDragStart"
+            catchtouchmove="onCategoryDragMove"
+            catchtouchend="onCategoryDragEnd"
+            catchtouchcancel="onCategoryDragEnd"
+            data-index="{{index}}"
+          >☰</view>
+        </view>
+      </view>
     </view>
-    <view class="menu-row" bindtap="openTotalRecords">
-      <view class="menu-left">📊 总记录</view>
-      <text class="menu-arrow">已规划 {{totalDays}} 天 ›</text>
-    </view>
-    <view class="menu-row" bindtap="openRanking">
-      <view class="menu-left">⭐ 最常吃</view>
-      <text class="menu-arrow">{{mostEaten}} ›</text>
-    </view>
+    <text class="hint">💡 删除分类后，该分类下的菜品会自动归入「其他」</text>
   </view>
 
-  <text class="footer-text">每日菜单 v1.0 · 两个人的小餐桌</text>
+  <view wx:elif="{{currentPanel === 'emoji'}}">
+    <view class="panel-header">
+      <view class="panel-back" bindtap="backToMenu">← 图标管理</view>
+      <view class="btn-add" bindtap="openEmojiManageAdd">＋ 自定义</view>
+    </view>
+
+    <view wx:if="{{emojiManageLoading}}" class="empty-state">
+      <view class="big-icon">⏳</view>
+      <text>加载中…</text>
+    </view>
+    <view wx:else>
+      <view class="card">
+        <view class="card-title">⭐ 我的图标 <text class="card-sub">{{emojiManageCustomEmojis.length}} 个</text></view>
+        <text class="hint-text">💡 编辑菜品时显示的快捷图标。点击图标可移除（最少保留4个）</text>
+        <view class="emoji-grid">
+          <view
+            class="emoji-item my-emoji"
+            wx:for="{{emojiManageCustomEmojis}}"
+            wx:key="*this"
+            bindtap="removeEmojiFromManage"
+            data-emoji="{{item}}"
+          >
+            <text>{{item}}</text>
+            <text class="remove-tag">✕</text>
+          </view>
+        </view>
+        <view wx:if="{{emojiManageCustomEmojis.length === 0}}" class="text-muted">还没有图标，从下方推荐库添加</view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">📚 推荐图标库 <text class="card-sub">170 个</text></view>
+        <text class="hint-text">💡 点击图标即可添加到「我的图标」</text>
+        <view class="search-bar">
+          <text class="search-icon">🔍</text>
+          <input placeholder="搜索推荐图标..." value="{{emojiManageSearchText}}" bindinput="onEmojiManageSearch" />
+        </view>
+        <scroll-view scroll-y style="max-height:500rpx;">
+          <view class="emoji-grid">
+            <text
+              class="emoji-item recommended"
+              wx:for="{{emojiManageFilteredRecommended}}"
+              wx:key="*this"
+              bindtap="addEmojiToManage"
+              data-emoji="{{item}}"
+            >{{item}}</text>
+          </view>
+          <view wx:if="{{emojiManageFilteredRecommended.length === 0}}" class="text-muted" style="padding:16rpx;">
+            {{emojiManageSearchText ? '没有匹配的图标' : '所有推荐图标都已添加'}}
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+  </view>
 </view>
 
 <!-- 排名弹窗 -->
@@ -50,7 +226,7 @@
         </view>
       </view>
       <view wx:else class="empty-state">
-        <text>还没有做菜记录</text>
+        <text>{{rankLoading ? '加载中…' : '还没有做菜记录'}}</text>
       </view>
     </scroll-view>
     <view class="modal-actions rank-modal-actions">
@@ -71,7 +247,7 @@
         </view>
       </view>
       <view wx:else class="empty-state">
-        <text>还没有规划记录</text>
+        <text>{{recordsLoading ? '加载中…' : '还没有规划记录'}}</text>
       </view>
     </scroll-view>
     <view class="modal-actions">
@@ -79,3 +255,64 @@
     </view>
   </view>
 </view>
+
+<!-- 菜品分类弹窗 -->
+<view class="modal-mask {{dishManageShowCategoryModal ? 'show' : ''}}" bindtap="closeDishCategoryModal">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📂 选择分类</view>
+    <view
+      class="picker-item"
+      wx:for="{{dishManageCategories}}"
+      wx:key="*this"
+      wx:if="{{item !== '全部'}}"
+      bindtap="confirmDishBatchCategory"
+      data-cat="{{item}}"
+    >
+      <text>📂 {{item}}</text>
+      <text class="picker-add">选择 ›</text>
+    </view>
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeDishCategoryModal">取消</button>
+    </view>
+  </view>
+</view>
+
+<!-- 分类新增弹窗 -->
+<view class="modal-mask {{categoryManageShowAddModal ? 'show' : ''}}" bindtap="closeCategoryAdd">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">📂 新增分类</view>
+    <input class="form-input" placeholder="分类名称" value="{{categoryManageNewCatName}}" bindinput="onCategoryNameInput" />
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeCategoryAdd">取消</button>
+      <button class="btn-confirm" bindtap="confirmCategoryAdd" disabled="{{categoryManageAdding}}">{{categoryManageAdding ? '添加中…' : '添加'}}</button>
+    </view>
+  </view>
+</view>
+
+<!-- 分类修改弹窗 -->
+<view class="modal-mask {{categoryManageShowEditModal ? 'show' : ''}}" bindtap="closeCategoryEdit">
+  <view class="modal-box edit-modal-box" catchtap="noop">
+    <view class="modal-title">修改分类名称</view>
+    <input class="form-input" placeholder="分类名称" value="{{categoryManageEditingCatName}}" bindinput="onCategoryEditNameInput" />
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeCategoryEdit">取消</button>
+      <button class="btn-confirm" bindtap="confirmCategoryEdit">保存</button>
+    </view>
+  </view>
+</view>
+
+<!-- 图标新增弹窗 -->
+<view class="modal-mask {{emojiManageShowAddModal ? 'show' : ''}}" bindtap="closeEmojiManageAdd">
+  <view class="modal-box" catchtap="noop">
+    <view class="modal-title">😊 自定义添加图标</view>
+    <text class="modal-sub">输入一个推荐库中没有的 emoji 图标</text>
+    <input class="form-input emoji-input" placeholder="输入 emoji，如 🧁" value="{{emojiManageNewEmoji}}" bindinput="onEmojiManageInput" maxlength="4" />
+    <view class="modal-actions">
+      <button class="btn-cancel" bindtap="closeEmojiManageAdd">取消</button>
+      <button class="btn-confirm" bindtap="confirmEmojiManageAdd">添加</button>
+    </view>
+  </view>
+</view>
+
+<!-- Toast -->
+<view class="toast {{toastShow ? 'show' : ''}}">{{toastMsg}}</view>

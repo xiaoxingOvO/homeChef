@@ -18,7 +18,10 @@
 }
 
 .header-icon {
-  font-size: 48rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .header-title {

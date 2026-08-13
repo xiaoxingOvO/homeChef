@@ -1,8 +1,16 @@
 /* pages/emoji-manage/emoji-manage.wxss */
 
+page {
+  min-height: 100vh;
+  background: #f2f2f7;
+}
+
 .page {
   padding: 16rpx 32rpx;
   padding-bottom: 80rpx;
+  min-height: 100vh;
+  box-sizing: border-box;
+  background: #f2f2f7;
 }
 
 .back-bar {

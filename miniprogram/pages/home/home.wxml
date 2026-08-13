@@ -3,8 +3,8 @@
   <!-- 顶栏 -->
   <view class="header">
     <view class="header-left">
-      <text class="header-icon">🍽️</text>
-      <text class="header-title">每日菜单</text>
+      <image class="header-icon" src="/assets/app-logo.jpeg" mode="aspectFill" />
+      <text class="header-title">家有小厨记</text>
     </view>
     <text class="header-date">{{dateDisplay}}</text>
   </view>

@@ -12,6 +12,7 @@ interface Dish {
   image: string
   steps: string[]
   note: string
+  seedOrder?: number
   createdAt?: Date
   updatedAt?: Date
 }

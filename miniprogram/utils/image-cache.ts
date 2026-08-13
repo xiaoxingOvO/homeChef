@@ -69,21 +69,15 @@ export async function resolveDishImage(image: string): Promise<string> {
     }
 
     try {
-      const downloaded = await wx.cloud.downloadFile({ fileID: image })
-      const saved = await new Promise<string>((resolve, reject) => {
-        wx.getFileSystemManager().saveFile({
-          tempFilePath: downloaded.tempFilePath,
-          success: (res) => resolve(res.savedFilePath),
-          fail: reject,
-        })
-      })
-
-      cache[image] = saved
-      memoryCache[image] = saved
+      const res = await wx.cloud.getTempFileURL({ fileList: [image] })
+      const tempURL = res.fileList?.[0]?.tempFileURL
+      const resolved = tempURL || image
+      if (tempURL) cache[image] = tempURL
+      memoryCache[image] = resolved
       wx.setStorageSync(IMAGE_CACHE_KEY, cache)
-      return saved
+      return resolved
     } catch (err) {
-      console.warn('图片本地缓存失败，继续使用云图片:', err)
+      console.warn('图片临时链接解析失败，继续使用云图片:', err)
       return image
     } finally {
       delete pendingDownloads[image]
@@ -96,14 +90,56 @@ export async function resolveDishImage(image: string): Promise<string> {
 export async function resolveDishImages<T extends { image: string }>(
   items: T[]
 ): Promise<Array<T & { displayImage: string }>> {
-  return Promise.all(items.map(async (item) => {
-    const displayImage = await resolveDishImage(item.image)
+  const result = items.map((item) => ({ ...item, displayImage: item.image || '' }))
+  const cloudImages = [...new Set(items
+    .map((item) => item.image)
+    .filter((image) => image && image.startsWith('cloud://') && !memoryCache[image])
+  )]
+
+  for (let i = 0; i < cloudImages.length; i += 50) {
+    const fileList = cloudImages.slice(i, i + 50)
+    try {
+      const res = await wx.cloud.getTempFileURL({ fileList })
+      res.fileList?.forEach((file) => {
+        if (file.fileID && file.tempFileURL) {
+          memoryCache[file.fileID] = file.tempFileURL
+        }
+      })
+    } catch (err) {
+      console.warn('批量解析图片临时链接失败，继续使用原始图片地址:', err)
+    }
+  }
+
+  return result.map((item) => {
+    const displayImage = memoryCache[item.image] || item.displayImage
     const id = (item as T & { _id?: string })._id
     if (id && displayImage) {
       dishImageMemoryCache[id] = { source: item.image, path: displayImage }
     }
     return { ...item, displayImage }
-  }))
+  })
+}
+
+/** 只用当前已知缓存同步生成显示图片，不触发云端解析。适合页面首帧快速渲染。 */
+export function resolveDishImagesFromCache<T extends { image: string; _id?: string }>(
+  items: T[]
+): Array<T & { displayImage: string }> {
+  const storageCache = readImageCache()
+  return items.map((item) => {
+    const byId = item._id ? dishImageMemoryCache[item._id] : undefined
+    const displayImage =
+      (byId?.source === item.image ? byId.path : '') ||
+      memoryCache[item.image] ||
+      storageCache[item.image] ||
+      item.image ||
+      ''
+
+    if (item._id && displayImage) {
+      dishImageMemoryCache[item._id] = { source: item.image, path: displayImage }
+    }
+
+    return { ...item, displayImage }
+  })
 }
 
 /** 获取本次打开小程序期间已经解析好的菜品图片路径。 */

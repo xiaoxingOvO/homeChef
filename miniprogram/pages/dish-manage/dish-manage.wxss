@@ -1,5 +1,10 @@
 /* pages/dish-manage/dish-manage.wxss */
 
+page {
+  min-height: 100vh;
+  background: #f2f2f7;
+}
+
 .page {
   padding: 16rpx 32rpx;
   padding-bottom: 80rpx;
@@ -182,4 +187,11 @@
 .picker-add {
   color: var(--pri);
   font-size: 26rpx;
+}
+
+.list-footer {
+  padding: 24rpx 0 40rpx;
+  text-align: center;
+  color: var(--text2);
+  font-size: 24rpx;
 }

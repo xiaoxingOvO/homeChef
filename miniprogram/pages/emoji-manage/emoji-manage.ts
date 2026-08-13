@@ -16,7 +16,8 @@ Page({
   },
 
   async onShow() {
-    await this.loadData()
+    this.setData({ customEmojis: [], filteredRecommended: [] })
+    void this.loadData()
   },
 
   async loadData() {
@@ -27,9 +28,11 @@ Page({
         : DEFAULT_EMOJIS
       this.setData({ customEmojis })
       this.filterRecommended()
+      wx.hideLoading()
     } catch (err) {
       console.error('加载图标失败:', err)
       this.filterRecommended()
+      wx.hideLoading()
     }
   },
 

@@ -123,7 +123,7 @@
       <text class="search-icon">🔍</text>
       <input placeholder="搜索..." value="{{dishSearch}}" bindinput="onDishSearch" />
     </view>
-    <scroll-view scroll-y style="max-height:500rpx;">
+    <scroll-view scroll-y style="max-height:500rpx;" bindscrolltolower="loadMorePickerDishes">
       <view
         class="picker-item"
         wx:for="{{filteredDishes}}"
@@ -135,7 +135,10 @@
         <text class="picker-add">+ 添加</text>
       </view>
       <view wx:if="{{filteredDishes.length === 0}}" class="empty-state">
-        <text>没有找到菜品</text>
+        <text>{{dishPickerLoading ? '加载中…' : '没有找到菜品'}}</text>
+      </view>
+      <view class="picker-footer" wx:if="{{filteredDishes.length > 0}}">
+        <text>{{dishPickerLoadingMore ? '加载中…' : (dishPickerHasMore ? '上拉加载更多' : '已显示全部')}}</text>
       </view>
     </scroll-view>
     <view class="modal-actions">

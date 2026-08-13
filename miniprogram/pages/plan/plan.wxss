@@ -396,3 +396,10 @@
   color: var(--pri);
   font-size: 26rpx;
 }
+
+.picker-footer {
+  padding: 20rpx 0;
+  text-align: center;
+  color: var(--text2);
+  font-size: 24rpx;
+}

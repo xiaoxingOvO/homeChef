@@ -4,6 +4,8 @@ import {
   updateCategoryName, updateCategoryOrders,
 } from '../../utils/db'
 
+let categoryManageCache: Category[] = []
+
 Page({
   addingInProgress: false,
   dragItemRects: [] as Array<{ top: number; bottom: number }>,
@@ -29,15 +31,22 @@ Page({
   },
 
   async onShow() {
-    await this.loadData()
+    this.setData({ categories: [] })
+    if (categoryManageCache.length > 0) {
+      this.setData({ categories: categoryManageCache })
+    }
+    void this.loadData()
   },
 
   async loadData() {
     try {
       const categories = await getCategories()
+      categoryManageCache = categories
       this.setData({ categories })
+      wx.hideLoading()
     } catch (err) {
       console.error('加载分类失败:', err)
+      wx.hideLoading()
     }
   },
 
@@ -251,6 +260,7 @@ Page({
 
         await deleteCategory(id)
         const categories = await getCategories()
+        categoryManageCache = categories
         await updateCategoryOrders(categories)
         this.setData({ categories })
         this.showToast('已删除「' + name + '」，菜品已归入「其他」')

@@ -1,10 +1,32 @@
 // pages/recipe/recipe.ts
 import { getToday, MEALS } from '../../utils/util'
-import { getDishes, getCategories, saveMealPlan, getMealPlans } from '../../utils/db'
-import { resolveDishImages } from '../../utils/image-cache'
+import {
+  DB_QUERY_LIMIT,
+  getCachedCategories,
+  getCachedDishCount,
+  getCachedDishesPage,
+  getDishesPage,
+  countDishes,
+  getCategories,
+  saveMealPlan,
+  getMealPlans,
+} from '../../utils/db'
+import { resolveDishImages, resolveDishImagesFromCache } from '../../utils/image-cache'
 
 let recipeSelectedIds = new Set<string>()
+let recipeSelectedDishes = new Map<string, Dish>()
 let recipeAllDishes: Array<Dish & { displayImage: string }> = []
+let recipeSearchTimer: number | undefined
+let recipeLoadToken = 0
+const RECIPE_PAGE_SIZE = DB_QUERY_LIMIT
+
+function buildRecipeQuery(data: { currentCategory: string; searchText: string }) {
+  return {
+    limit: RECIPE_PAGE_SIZE,
+    category: data.currentCategory,
+    search: data.searchText,
+  }
+}
 
 Page({
   data: {
@@ -19,23 +41,67 @@ Page({
     toastShow: false,
     toastMsg: '',
     loading: true,
+    loadingMore: false,
+    hasMore: true,
+    totalCount: 0,
   },
 
-  async onShow() {
-    await this.loadData()
+  onShow() {
+    this.renderCachedFirstPage()
+    void this.loadData()
+  },
+
+  renderCachedFirstPage(): boolean {
+    const query = buildRecipeQuery(this.data)
+    const cachedDishes = getCachedDishesPage(query)
+    const cachedTotal = getCachedDishCount(query)
+    const cachedCategories = getCachedCategories()
+    if (!cachedDishes && !cachedCategories && cachedTotal === null) return false
+
+    const update: Record<string, any> = {}
+    if (cachedCategories) {
+      const catNames = cachedCategories.map((c) => c.name)
+      update.categories = ['全部', ...catNames]
+      update.currentCategory = catNames.includes(this.data.currentCategory)
+        ? this.data.currentCategory
+        : '全部'
+    }
+    if (cachedTotal !== null) update.totalCount = cachedTotal
+    if (cachedDishes) {
+      recipeAllDishes = resolveDishImagesFromCache(cachedDishes)
+      update.hasMore = cachedDishes.length === RECIPE_PAGE_SIZE
+      update.loading = false
+    }
+
+    this.setData(update, () => {
+      if (cachedDishes) this.renderDishes(recipeAllDishes)
+    })
+    return !!cachedDishes
   },
 
   async loadData() {
     try {
-      const [dishes, categories] = await Promise.all([getDishes(), getCategories()])
+      const token = ++recipeLoadToken
+      const hasCachedFirstPage = this.renderCachedFirstPage()
+      if (!hasCachedFirstPage) this.setData({ loading: true })
+      const query = buildRecipeQuery(this.data)
+      const [dishes, totalCount, categories] = await Promise.all([
+        getDishesPage(query),
+        countDishes(query),
+        getCategories(),
+      ])
+      if (token !== recipeLoadToken) return
       const catNames = categories.map((c) => c.name)
       const currentCategory = catNames.includes(this.data.currentCategory)
         ? this.data.currentCategory
         : '全部'
       recipeAllDishes = await resolveDishImages(dishes)
+      if (token !== recipeLoadToken) return
       this.setData({
         categories: ['全部', ...catNames],
         currentCategory,
+        totalCount,
+        hasMore: dishes.length === RECIPE_PAGE_SIZE,
       }, () => {
         this.renderDishes(recipeAllDishes)
         this.setData({ loading: false })
@@ -46,15 +112,67 @@ Page({
     }
   },
 
-  renderDishes(allDishes: Dish[]) {
-    const { searchText, currentCategory } = this.data
-    const filtered = allDishes.filter((d) => {
-      const catMatch = currentCategory === '全部' || d.category === currentCategory
-      const searchMatch = !searchText || d.name.includes(searchText.toLowerCase())
-      return catMatch && searchMatch
-    })
+  async loadFirstPage() {
+    try {
+      const token = ++recipeLoadToken
+      const hasCachedFirstPage = this.renderCachedFirstPage()
+      this.setData({
+        loading: !hasCachedFirstPage,
+        loadingMore: false,
+        hasMore: hasCachedFirstPage ? this.data.hasMore : true,
+      })
+      const query = buildRecipeQuery(this.data)
+      const [dishes, totalCount] = await Promise.all([
+        getDishesPage(query),
+        countDishes(query),
+      ])
+      if (token !== recipeLoadToken) return
+      recipeAllDishes = await resolveDishImages(dishes)
+      if (token !== recipeLoadToken) return
+      this.setData({
+        totalCount,
+        hasMore: dishes.length === RECIPE_PAGE_SIZE,
+      }, () => {
+        this.renderDishes(recipeAllDishes)
+        this.setData({ loading: false })
+      })
+    } catch (err) {
+      console.error('加载菜谱失败:', err)
+      this.setData({ loading: false })
+    }
+  },
 
-    const enhanced = filtered.map((d) => ({
+  async loadMoreDishes(): Promise<boolean> {
+    const token = recipeLoadToken
+    if (this.data.loadingMore || !this.data.hasMore) return false
+    this.setData({ loadingMore: true })
+    try {
+      const dishes = await getDishesPage({
+        skip: recipeAllDishes.length,
+        limit: RECIPE_PAGE_SIZE,
+        category: this.data.currentCategory,
+        search: this.data.searchText,
+      })
+      const resolved = await resolveDishImages(dishes)
+      if (token !== recipeLoadToken) return false
+      recipeAllDishes = [...recipeAllDishes, ...resolved]
+      const hasMore = dishes.length === RECIPE_PAGE_SIZE
+      this.setData({
+        hasMore,
+      }, () => {
+        this.renderDishes(recipeAllDishes)
+      })
+      return hasMore
+    } catch (err) {
+      console.error('加载更多菜谱失败:', err)
+      return false
+    } finally {
+      if (token === recipeLoadToken) this.setData({ loadingMore: false })
+    }
+  },
+
+  renderDishes(allDishes: Dish[]) {
+    const enhanced = allDishes.map((d) => ({
       ...d,
       selected: recipeSelectedIds.has(d._id!),
       starsText: '⭐'.repeat(d.stars),
@@ -64,15 +182,17 @@ Page({
   },
 
   onSearch(e: any) {
-    this.setData({ searchText: e.detail.value }, () => {
-      this.renderDishes(recipeAllDishes)
-    })
+    this.setData({ searchText: e.detail.value })
+    if (recipeSearchTimer) clearTimeout(recipeSearchTimer)
+    recipeSearchTimer = setTimeout(() => {
+      this.loadFirstPage()
+    }, 300) as unknown as number
   },
 
   selectCategory(e: any) {
     const cat = e.currentTarget.dataset.cat
     this.setData({ currentCategory: cat }, () => {
-      this.renderDishes(recipeAllDishes)
+      void this.loadFirstPage()
     })
   },
 
@@ -86,8 +206,11 @@ Page({
     const id = e.currentTarget.dataset.id
     if (recipeSelectedIds.has(id)) {
       recipeSelectedIds.delete(id)
+      recipeSelectedDishes.delete(id)
     } else {
       recipeSelectedIds.add(id)
+      const dish = recipeAllDishes.find((item) => item._id === id)
+      if (dish) recipeSelectedDishes.set(id, dish)
     }
     this.renderDishes(recipeAllDishes)
   },
@@ -128,8 +251,7 @@ Page({
       dinner: [],
     }
 
-    const allDishes = await getDishes()
-    const selectedDishes = allDishes.filter((d) => recipeSelectedIds.has(d._id!))
+    const selectedDishes = [...recipeSelectedDishes.values()]
 
     let added = 0
     selectedDishes.forEach((d) => {
@@ -144,6 +266,7 @@ Page({
 
     // 清空选中
     recipeSelectedIds = new Set()
+    recipeSelectedDishes = new Map()
     this.loadData()
     this.setData({ showBatchModal: false })
 
@@ -159,4 +282,8 @@ Page({
   },
 
   noop() {},
+
+  onReachBottom() {
+    void this.loadMoreDishes()
+  },
 })

@@ -1,7 +1,15 @@
 {
-  "envId": "{{env.ENV_ID}}",
-  "functionRoot": "./functions",
-  "functions": [],
+  "envId": "cloud1-d4g2275j3b7f31ddd",
+  "functionRoot": "./miniprogram/cloudfunctions",
+  "functions": [
+    {
+      "name": "seedData",
+      "timeout": 30,
+      "memorySize": 256,
+      "runtime": "Nodejs16.13",
+      "handler": "index.main"
+    }
+  ],
   "ai": {
     "defaultAgent": "{{env.AI_DEFAULT_AGENT}}",
     "agents": {

@@ -48,50 +48,60 @@
     <button class="btn-sm btn-warn" bindtap="openBatchAdd">📋 加入今日</button>
   </view>
 
-  <!-- 菜品网格 -->
-  <view class="dish-grid {{layoutMode === 'list' ? 'list-mode' : ''}}" wx:if="{{dishes.length > 0}}">
-    <view
-      class="dish-card"
-      wx:for="{{dishes}}"
-      wx:key="_id"
-    >
-      <!-- 图片区（点击进详情） -->
-      <view class="img-placeholder" bindtap="openDetail" data-id="{{item._id}}">
-        <image
-          wx:if="{{item.displayImage}}"
-          src="{{item.displayImage}}"
-          mode="aspectFill"
-          lazy-load="{{true}}"
-          binderror="onDishImageError"
-          data-id="{{item._id}}"
-        />
-        <text wx:else class="emoji-lg">{{item.emoji}}</text>
-      </view>
+  <view class="recipe-scroll">
+    <!-- 菜品网格 -->
+    <view class="dish-grid {{layoutMode === 'list' ? 'list-mode' : ''}}" wx:if="{{dishes.length > 0}}">
+      <view
+        class="dish-card"
+        wx:for="{{dishes}}"
+        wx:key="_id"
+      >
+        <!-- 图片区（点击进详情） -->
+        <view class="img-placeholder" bindtap="openDetail" data-id="{{item._id}}">
+          <image
+            wx:if="{{item.displayImage}}"
+            src="{{item.displayImage}}"
+            mode="aspectFill"
+            lazy-load="{{true}}"
+            binderror="onDishImageError"
+            data-id="{{item._id}}"
+          />
+          <text wx:else class="emoji-lg">{{item.emoji}}</text>
+        </view>
 
-      <!-- 信息 -->
-      <view class="info" bindtap="openDetail" data-id="{{item._id}}">
-        <text class="name">{{item.name}}</text>
-        <view class="meta">
-          <text class="stars">{{item.starsText}}</text>
-          <text>{{item.count}}次</text>
+        <!-- 信息 -->
+        <view class="info" bindtap="openDetail" data-id="{{item._id}}">
+          <text class="name">{{item.name}}</text>
+          <view class="meta">
+            <text class="stars">{{item.starsText}}</text>
+            <text>{{item.count}}次</text>
+          </view>
+        </view>
+
+        <!-- 选择框：列表模式显示在最右侧 -->
+        <view
+          class="checkbox {{item.selected ? 'checked' : ''}}"
+          catchtap="toggleSelect"
+          data-id="{{item._id}}"
+        >
+          <text wx:if="{{item.selected}}">✓</text>
         </view>
       </view>
-
-      <!-- 选择框：列表模式显示在最右侧 -->
-      <view
-        class="checkbox {{item.selected ? 'checked' : ''}}"
-        catchtap="toggleSelect"
-        data-id="{{item._id}}"
-      >
-        <text wx:if="{{item.selected}}">✓</text>
-      </view>
     </view>
-  </view>
 
-  <!-- 空状态 -->
-  <view wx:else class="empty-state">
-    <view class="big-icon">📖</view>
-    <text>没有找到菜品</text>
+    <!-- 空状态 -->
+    <view wx:else class="empty-state">
+      <view class="big-icon">📖</view>
+      <text>{{loading ? '加载中…' : '没有找到菜品'}}</text>
+    </view>
+
+    <view class="list-footer" wx:if="{{dishes.length > 0}}">
+      <text>
+        {{loadingMore ? '加载中…' : (hasMore ? '继续加载中' : '已显示全部')}}
+        · 已显示 {{dishes.length}} / 共 {{totalCount}} 道
+      </text>
+      <button wx:if="{{hasMore}}" class="load-more-btn" bindtap="loadMoreDishes">加载更多</button>
+    </view>
   </view>
 </view>
 

@@ -1,11 +1,100 @@
 // pages/plan/plan.ts
 import {
   getToday, getWeekStart, formatDate, formatDateDisplay, getWeekday, isToday,
-  MEALS, generateId,
+  MEALS,
 } from '../../utils/util'
 import {
-  getMealPlans, saveMealPlan, saveMealPlans, deleteMealPlan, getDishes, getMonthMealPlans,
+  DB_QUERY_LIMIT,
+  getCachedMealPlans,
+  getCachedMonthMealPlans,
+  getDishes,
+  getMealPlans,
+  saveMealPlan,
+  saveMealPlans,
+  deleteMealPlan,
+  getDishesPage,
+  getMonthMealPlans,
+  getRandomDishes,
 } from '../../utils/db'
+
+let dishPickerSearchTimer: number | undefined
+const DISH_PICKER_PAGE_SIZE = DB_QUERY_LIMIT
+
+function buildWeekContext(rawWeekOffset: number) {
+  const weekOffset = Math.max(0, Number(rawWeekOffset) || 0)
+  const start = getWeekStart(weekOffset)
+  const today = getToday()
+  const dates: string[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start)
+    d.setDate(d.getDate() + i)
+    dates.push(formatDate(d))
+  }
+
+  return {
+    weekOffset,
+    today,
+    dates,
+    weekLabel: formatDateDisplay(dates[0]) + ' - ' + formatDateDisplay(dates[6]),
+  }
+}
+
+function buildWeekDays(dates: string[], today: string, plans: MealPlan[]) {
+  const planMap: Record<string, MealPlan> = {}
+  plans.forEach((p) => { planMap[p.date] = p })
+
+  return dates.map((date) => {
+    const plan = planMap[date]
+    const preview: { icon: string; text: string }[] = []
+    if (plan?.meals.breakfast.length) preview.push({ icon: '🌅', text: plan.meals.breakfast[0] })
+    if (plan?.meals.lunch.length) preview.push({ icon: '🌞', text: plan.meals.lunch[0] })
+    if (plan?.meals.dinner.length) preview.push({ icon: '🌙', text: plan.meals.dinner[0] })
+
+    return {
+      date,
+      weekday: getWeekday(date),
+      dateDisplay: formatDateDisplay(date),
+      isToday: isToday(date),
+      isPast: date < today,
+      preview,
+      hasPlan: preview.length > 0,
+    }
+  })
+}
+
+function buildHistoryContext(rawMonthOffset: number) {
+  const historyMonthOffset = Math.min(0, Number(rawMonthOffset) || 0)
+  const now = new Date()
+  now.setMonth(now.getMonth() + historyMonthOffset)
+  const year = now.getFullYear()
+  const month = now.getMonth()
+
+  return {
+    historyMonthOffset,
+    year,
+    month,
+    historyMonthLabel: year + '年' + (month + 1) + '月',
+  }
+}
+
+function buildHistoryList(plans: MealPlan[]) {
+  const today = getToday()
+  return plans
+    .filter((plan) => plan.date < today)
+    .map((plan) => ({
+      date: plan.date,
+      dateDisplay: formatDateDisplay(plan.date),
+      weekday: getWeekday(plan.date),
+      meals: MEALS
+        .filter((m) => plan.meals[m.key]?.length > 0)
+        .map((m) => ({
+          key: m.key,
+          icon: m.icon,
+          label: m.label,
+          dishes: plan.meals[m.key],
+        })),
+    }))
+}
 
 Page({
   randomFillInProgress: false,
@@ -35,6 +124,9 @@ Page({
     dishSearch: '',
     filteredDishes: [] as Dish[],
     editingSlot: '',
+    dishPickerLoading: false,
+    dishPickerLoadingMore: false,
+    dishPickerHasMore: true,
 
     // 今日编辑弹窗（从首页进入）
     showTodayEdit: false,
@@ -55,7 +147,7 @@ Page({
     }
   },
 
-  async onShow() {
+  onShow() {
     const app = getApp<IAppOption>()
     const shouldOpenTodayEdit = app.globalData.openTodayEditRequested
     if (shouldOpenTodayEdit) {
@@ -63,13 +155,15 @@ Page({
     }
 
     if (this.data.viewMode === 'week') {
-      await this.loadWeek()
+      this.renderCachedWeek()
+      void this.loadWeek()
     } else {
-      await this.loadHistory()
+      this.renderCachedHistory()
+      void this.loadHistory()
     }
 
     if (shouldOpenTodayEdit) {
-      await this.openTodayEdit()
+      void this.openTodayEdit()
     }
   },
 
@@ -79,60 +173,53 @@ Page({
     const view = e.currentTarget.dataset.view
     this.setData({ viewMode: view })
     if (view === 'week') {
+      this.renderCachedWeek()
       this.loadWeek()
     } else {
+      this.renderCachedHistory()
       this.loadHistory()
     }
   },
 
   // ==================== 周视图 ====================
 
-  async loadWeek() {
-    const weekOffset = Math.max(0, Number(this.data.weekOffset) || 0)
-    if (weekOffset !== this.data.weekOffset) {
-      this.setData({ weekOffset })
+  renderCachedWeek(): boolean {
+    const context = buildWeekContext(this.data.weekOffset)
+    const cachedPlans = getCachedMealPlans(context.dates)
+    const baseUpdate: Record<string, any> = {
+      weekOffset: context.weekOffset,
+      weekLabel: context.weekLabel,
     }
-    const start = getWeekStart(weekOffset)
-    const today = getToday()
-    const dates: string[] = []
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start)
-      d.setDate(d.getDate() + i)
-      dates.push(formatDate(d))
+    if (!cachedPlans) {
+      this.setData({
+        ...baseUpdate,
+        weekDays: buildWeekDays(context.dates, context.today, []),
+        loading: false,
+      })
+      return false
     }
 
     this.setData({
-      weekLabel: formatDateDisplay(dates[0]) + ' - ' + formatDateDisplay(dates[6]),
+      ...baseUpdate,
+      weekDays: buildWeekDays(context.dates, context.today, cachedPlans),
+      loading: false,
     })
+    return true
+  },
+
+  async loadWeek() {
+    const hadCache = this.renderCachedWeek()
+    const context = buildWeekContext(this.data.weekOffset)
 
     try {
-      const plans = await getMealPlans(dates)
-      const planMap: Record<string, MealPlan> = {}
-      plans.forEach((p) => { planMap[p.date] = p })
-
-      const weekDays = dates.map((date) => {
-        const plan = planMap[date]
-        const preview: { icon: string; text: string }[] = []
-        if (plan?.meals.breakfast.length) preview.push({ icon: '🌅', text: plan.meals.breakfast[0] })
-        if (plan?.meals.lunch.length) preview.push({ icon: '🌞', text: plan.meals.lunch[0] })
-        if (plan?.meals.dinner.length) preview.push({ icon: '🌙', text: plan.meals.dinner[0] })
-        const hasPlan = preview.length > 0
-
-        return {
-          date,
-          weekday: getWeekday(date),
-          dateDisplay: formatDateDisplay(date),
-          isToday: isToday(date),
-          isPast: date < today,
-          preview,
-          hasPlan,
-        }
+      const plans = await getMealPlans(context.dates)
+      this.setData({
+        weekDays: buildWeekDays(context.dates, context.today, plans),
+        loading: false,
       })
-
-      this.setData({ weekDays, loading: false })
     } catch (err) {
       console.error('加载周视图失败:', err)
-      this.setData({ loading: false })
+      if (!hadCache) this.setData({ loading: false })
     }
   },
 
@@ -192,9 +279,9 @@ Page({
     }
 
     try {
-      // 菜品和本周规划同时读取，避免按天串行请求。
+      // 菜品只抽样读取，避免为了随机填充一次性拉完整菜品库。
       const [dishes, existingPlans] = await Promise.all([
-        getDishes(),
+        getRandomDishes(80),
         getMealPlans(dates),
       ])
       if (dishes.length === 0) {
@@ -266,41 +353,36 @@ Page({
 
   // ==================== 历史视图 ====================
 
-  async loadHistory() {
-    const historyMonthOffset = Math.min(0, Number(this.data.historyMonthOffset) || 0)
-    const now = new Date()
-    now.setMonth(now.getMonth() + historyMonthOffset)
-    const year = now.getFullYear()
-    const month = now.getMonth()
+  renderCachedHistory(): boolean {
+    const context = buildHistoryContext(this.data.historyMonthOffset)
+    const cachedPlans = getCachedMonthMealPlans(context.year, context.month)
+    const baseUpdate: Record<string, any> = {
+      historyMonthOffset: context.historyMonthOffset,
+      historyMonthLabel: context.historyMonthLabel,
+    }
+    if (!cachedPlans) {
+      this.setData(baseUpdate)
+      return false
+    }
 
     this.setData({
-      historyMonthOffset,
-      historyMonthLabel: year + '年' + (month + 1) + '月',
+      ...baseUpdate,
+      historyList: buildHistoryList(cachedPlans),
+      loading: false,
     })
+    return true
+  },
+
+  async loadHistory() {
+    const hadCache = this.renderCachedHistory()
+    const context = buildHistoryContext(this.data.historyMonthOffset)
 
     try {
-      const plans = await getMonthMealPlans(year, month)
-      const today = getToday()
-      const historyList = plans
-        .filter((plan) => plan.date < today)
-        .map((plan) => ({
-        date: plan.date,
-        dateDisplay: formatDateDisplay(plan.date),
-        weekday: getWeekday(plan.date),
-        meals: MEALS
-          .filter((m) => plan.meals[m.key]?.length > 0)
-          .map((m) => ({
-            key: m.key,
-            icon: m.icon,
-            label: m.label,
-            dishes: plan.meals[m.key],
-          })),
-      }))
-
-      this.setData({ historyList, loading: false })
+      const plans = await getMonthMealPlans(context.year, context.month)
+      this.setData({ historyList: buildHistoryList(plans), loading: false })
     } catch (err) {
       console.error('加载历史失败:', err)
-      this.setData({ loading: false })
+      if (!hadCache) this.setData({ loading: false })
     }
   },
 
@@ -403,25 +485,58 @@ Page({
   openAddDish(e: any) {
     const slot = e.currentTarget.dataset.slot
     this.setData({ editingSlot: slot, showDishPicker: true, dishSearch: '' })
-    this.loadFilteredDishes()
+    this.loadFirstPickerDishes()
   },
 
-  async loadFilteredDishes() {
-    const dishes = await getDishes()
-    const search = this.data.dishSearch.toLowerCase()
-    const filtered = dishes.filter((d) => d.name.includes(search))
-    this.setData({ filteredDishes: filtered })
+  async loadFirstPickerDishes() {
+    this.setData({ dishPickerLoading: true, dishPickerHasMore: true })
+    try {
+      const dishes = await getDishesPage({
+        limit: DISH_PICKER_PAGE_SIZE,
+        search: this.data.dishSearch,
+      })
+      this.setData({
+        filteredDishes: dishes,
+        dishPickerHasMore: dishes.length === DISH_PICKER_PAGE_SIZE,
+      })
+    } catch (err) {
+      console.error('加载菜品选择列表失败:', err)
+    } finally {
+      this.setData({ dishPickerLoading: false })
+    }
+  },
+
+  async loadMorePickerDishes() {
+    if (this.data.dishPickerLoadingMore || !this.data.dishPickerHasMore) return
+    this.setData({ dishPickerLoadingMore: true })
+    try {
+      const dishes = await getDishesPage({
+        skip: this.data.filteredDishes.length,
+        limit: DISH_PICKER_PAGE_SIZE,
+        search: this.data.dishSearch,
+      })
+      this.setData({
+        filteredDishes: [...this.data.filteredDishes, ...dishes],
+        dishPickerHasMore: dishes.length === DISH_PICKER_PAGE_SIZE,
+      })
+    } catch (err) {
+      console.error('加载更多菜品选择列表失败:', err)
+    } finally {
+      this.setData({ dishPickerLoadingMore: false })
+    }
   },
 
   onDishSearch(e: any) {
     this.setData({ dishSearch: e.detail.value })
-    this.loadFilteredDishes()
+    if (dishPickerSearchTimer) clearTimeout(dishPickerSearchTimer)
+    dishPickerSearchTimer = setTimeout(() => {
+      this.loadFirstPickerDishes()
+    }, 300) as unknown as number
   },
 
   async addDishToSlot(e: any) {
     const id = e.currentTarget.dataset.id
-    const dishes = await getDishes()
-    const dish = dishes.find((d) => d._id === id)
+    const dish = this.data.filteredDishes.find((d) => d._id === id)
     if (!dish) return
 
     const nameWithEmoji = dish.emoji + ' ' + dish.name
@@ -502,7 +617,7 @@ Page({
   openTodayAddDish(e: any) {
     const slot = e.currentTarget.dataset.slot
     this.setData({ editingSlot: slot, showDishPicker: true, dishSearch: '' })
-    this.loadFilteredDishes()
+    this.loadFirstPickerDishes()
   },
 
   async saveTodayEdit() {

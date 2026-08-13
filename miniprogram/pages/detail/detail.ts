@@ -1,6 +1,6 @@
 // pages/detail/detail.ts
 import { getToday, DEFAULT_EMOJIS } from '../../utils/util'
-import { getDishes, updateDish, deleteDish, getCategories, saveMealPlan, getMealPlans, getUserSettings, saveUserSettings, addDish } from '../../utils/db'
+import { getDishById, getDishByName, updateDish, deleteDish, getCategories, saveMealPlan, getMealPlans, getUserSettings, addDish } from '../../utils/db'
 import { getCachedDishImage, rememberDishImage, resolveDishImage } from '../../utils/image-cache'
 
 Page({
@@ -36,25 +36,21 @@ Page({
 
   async onLoad(options: any) {
     if (options.id === 'new') {
-      const [categories, settings] = await Promise.all([
-        getCategories(),
-        getUserSettings(),
-      ])
-      const catNames = categories.map((category) => category.name)
       this.setData({
         dishId: '',
         editingId: '',
-        categories: catNames,
-        customEmojis: settings?.customEmojis || DEFAULT_EMOJIS,
+        categories: this.data.categories.length ? this.data.categories : ['荤菜', '素菜', '汤', '主食', '凉菜', '小吃', '其他'],
+        customEmojis: this.data.customEmojis.length ? this.data.customEmojis : DEFAULT_EMOJIS,
         editForm: {
           name: '',
-          category: catNames[0] || '',
+          category: this.data.categories[0] || '荤菜',
           emoji: '🍛',
           stars: 3,
           image: '',
         },
         showEditModal: true,
       })
+      void this.loadEditOptions()
       return
     }
 
@@ -66,14 +62,33 @@ Page({
 
   async onShow() {
     if (this.data.dishId) {
-      await this.loadDish()
+      void this.loadDish()
+    }
+  },
+
+  async loadEditOptions() {
+    try {
+      const [categories, settings] = await Promise.all([
+        getCategories(),
+        getUserSettings(),
+      ])
+      const catNames = categories.map((category) => category.name)
+      this.setData({
+        categories: catNames,
+        customEmojis: settings?.customEmojis || DEFAULT_EMOJIS,
+        editForm: {
+          ...this.data.editForm,
+          category: this.data.editForm.category || catNames[0] || '',
+        },
+      })
+    } catch (err) {
+      console.error('加载编辑选项失败:', err)
     }
   },
 
   async loadDish() {
     try {
-      const dishes = await getDishes()
-      const dish = dishes.find((d) => d._id === this.data.dishId)
+      const dish = await getDishById(this.data.dishId)
       if (dish) {
         // 菜谱页已经解析过的图片直接复用，避免进入详情页时再次等待下载。
         const cachedImage = getCachedDishImage(dish._id!, dish.image)
@@ -84,6 +99,8 @@ Page({
           starsText: '⭐'.repeat(dish.stars),
         }
         this.setData({ dish: enhanced })
+      } else {
+        this.setData({ dish: null })
       }
     } catch (err) {
       console.error('加载菜品失败:', err)
@@ -135,16 +152,8 @@ Page({
     const d = this.data.dish
     if (!d) return
 
-    const [categories, settings] = await Promise.all([
-      getCategories(),
-      getUserSettings(),
-    ])
-
-    const catNames = categories.map((c) => c.name)
     this.setData({
       editingId: d._id!,
-      categories: catNames,
-      customEmojis: settings?.customEmojis || DEFAULT_EMOJIS,
       editForm: {
         name: d.name,
         category: d.category,
@@ -152,9 +161,14 @@ Page({
         stars: d.stars,
         image: d.image || '',
       },
-      editPreviewImage: d.displayImage || await resolveDishImage(d.image || ''),
+      editPreviewImage: d.displayImage || d.image || '',
       showEditModal: true,
     })
+    void this.loadEditOptions()
+    if (!d.displayImage && d.image) {
+      const image = await resolveDishImage(d.image)
+      this.setData({ editPreviewImage: image })
+    }
   },
 
   onFormChange(e: any) {
@@ -243,11 +257,10 @@ Page({
     }
 
     // 检查重名
-    const allDishes = await getDishes()
-    const dup = allDishes.find(
-      (d) => d.name === editForm.name && d._id !== editingId
-    )
-    if (dup) {
+    const dup = await getDishByName(editForm.name)
+    if (dup && dup._id === editingId) {
+      // 当前菜品本身，不算重名。
+    } else if (dup) {
       this.showToast('已存在同名菜品')
       return
     }
