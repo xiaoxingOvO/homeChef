@@ -14,7 +14,7 @@
     "useCompilerPlugins": false,
     "minifyWXML": true
   },
-  "compileType": "miniprogram",
+  "compileType": "homeChef",
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [],

@@ -1,6 +1,6 @@
 {
   "envId": "cloud1-d4g2275j3b7f31ddd",
-  "functionRoot": "./miniprogram/cloudfunctions",
+  "functionRoot": "./homeChef/cloudfunctions",
   "functions": [
     {
       "name": "seedData",

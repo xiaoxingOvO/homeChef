@@ -1,4 +1,5 @@
 # Project exclude paths
-/miniprogram/node_modules/
-/miniprogram/node_modules/miniprogram-api-typings/
+/homeChef/node_modules/
+/homeChef/node_modules/homeChef-api-typings/
 /.tmp/
+/.idea/

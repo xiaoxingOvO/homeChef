@@ -8,7 +8,7 @@ const ENV_ID = 'cloud1-d4g2275j3b7f31ddd'
 // Keep this in sync with the file ID returned by wx.cloud.uploadFile in the app.
 const FILE_ID_PREFIX = 'cloud://cloud1-d4g2275j3b7f31ddd.636c-cloud1-d4g2275j3b7f31ddd-1467129221'
 const LEGACY_FILE_ID_PREFIX = `cloud://${ENV_ID}.${ENV_ID}`
-const RECIPES_FILE = path.join(PROJECT_ROOT, 'miniprogram/cloudfunctions/seedData/seedRecipes.js')
+const RECIPES_FILE = path.join(PROJECT_ROOT, 'homeChef/cloudfunctions/seedData/seedRecipes.js')
 const IMAGE_DIR = path.join(PROJECT_ROOT, '.tmp/seed-recipe-images')
 const CLOUD_DIR = 'dishes/seed-recipes'
 const MANIFEST_FILE = path.join(PROJECT_ROOT, '.tmp/seed-recipe-image-manifest.json')
@@ -40,7 +40,13 @@ function getExtension(url) {
 async function downloadImage(url, localPath) {
   if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) return
 
-  const res = await fetch(url)
+  const res = await fetch(url, {
+    headers: {
+      Referer: 'https://home.meishichina.com/',
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+    },
+  })
   if (!res.ok) {
     throw new Error(`download failed: ${res.status} ${url}`)
   }

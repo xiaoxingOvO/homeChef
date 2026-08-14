@@ -4,7 +4,7 @@ const path = require('path')
 const PROJECT_ROOT = path.resolve(__dirname, '..')
 const RECIPES_FILE = path.join(
   PROJECT_ROOT,
-  'miniprogram/cloudfunctions/seedData/seedRecipes.js'
+  'homeChef/cloudfunctions/seedData/seedRecipes.js'
 )
 
 function has(text, words) {
